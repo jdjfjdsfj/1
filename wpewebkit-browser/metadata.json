@@ -1,0 +1,10 @@
+{
+    "id": "com.wpe.浏览器",
+    "name": "WPE浏览器",
+    "version": "1.0.0",
+    "author": "MiMoCode",
+    "description": "基于WPE WebKit的浏览器插件，完整支持网页渲染。保留与文本浏览器一致的UI交互。",
+    "icon": "qrc:/images/home/home-plugin.png",
+    "main_qml": "main.qml",
+    "main_so": "libwpewebkit_browser.so"
+}

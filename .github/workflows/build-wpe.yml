@@ -1,0 +1,390 @@
+name: Build WPE WebKit Browser Plugin
+
+on:
+  push:
+    paths:
+      - 'wpewebkit-browser-src/**'
+      - 'wpewebkit-browser/**'
+      - '.github/workflows/build-wpe.yml'
+  workflow_dispatch:          # 手动触发
+    inputs:
+      build_all:
+        description: '是否完整构建（含 WPE WebKit）'
+        type: boolean
+        default: false
+
+env:
+  TARGET_ARCH: aarch64
+  TARGET_TRIPLET: aarch64-linux-gnu
+  SYSROOT: /opt/wpe-sysroot
+  INSTALL_PREFIX: /opt/wpe-install
+
+jobs:
+  # ==========================================================
+  # Job 1: 交叉编译全部依赖（sqlite, libsoup, libwpe, ...）
+  # ==========================================================
+  build-deps:
+    runs-on: ubuntu-22.04
+    outputs:
+      deps-cache-hit: ${{ steps.deps-cache.outputs.cache-hit }}
+    steps:
+      - name: 安装交叉编译工具链
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
+            binutils-aarch64-linux-gnu \
+            cmake meson ninja-build pkg-config \
+            libglib2.0-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            libwayland-dev wayland-protocols \
+            libxkbcommon-dev libdrm-dev \
+            libxml2-dev libsqlite3-dev \
+            libjpeg-dev libpng-dev \
+            python3 python3-pip python3-jinja2 \
+            ruby bison flex gperf perl \
+            ccache wget curl
+
+          # 验证
+          aarch64-linux-gnu-gcc --version
+
+      - uses: actions/checkout@v4
+
+      - name: 设置 ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: wpe-deps-${{ runner.os }}-aarch64
+          max-size: 2G
+
+      - name: 创建交叉编译 meson 配置文件
+        run: |
+          mkdir -p $INSTALL_PREFIX/lib/pkgconfig
+          cat > /tmp/cross-aarch64.txt << 'MESONEOF'
+          [binaries]
+          c = 'aarch64-linux-gnu-gcc'
+          cpp = 'aarch64-linux-gnu-g++'
+          ar = 'aarch64-linux-gnu-ar'
+          strip = 'aarch64-linux-gnu-strip'
+          pkgconfig = 'aarch64-linux-gnu-pkg-config'
+
+          [properties]
+          pkg_config_libdir = '${{ env.INSTALL_PREFIX }}/lib/pkgconfig'
+
+          [host_machine]
+          system = 'linux'
+          cpu_family = 'aarch64'
+          cpu = 'aarch64'
+          endian = 'little'
+          MESONEOF
+
+      # ---------- libsoup2 (WebKit HTTP 层) ----------
+      - name: 缓存 libsoup2
+        id: cache-libsoup
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.INSTALL_PREFIX }}/lib/libsoup-2.4*
+            ${{ env.INSTALL_PREFIX }}/include/libsoup-2.4/
+            ${{ env.INSTALL_PREFIX }}/lib/pkgconfig/libsoup-2.4.pc
+          key: wpe-libsoup-2.74.3
+
+      - name: 编译 libsoup2
+        if: steps.cache-libsoup.outputs.cache-hit != 'true'
+        run: |
+          cd /tmp
+          wget -q https://download.gnome.org/sources/libsoup/2.74/libsoup-2.74.3.tar.xz
+          tar xf libsoup-2.74.3.tar.xz && cd libsoup-2.74.3
+
+          export CC="ccache aarch64-linux-gnu-gcc"
+          export CXX="ccache aarch64-linux-gnu-g++"
+          meson setup _build . \
+            --cross-file /tmp/cross-aarch64.txt \
+            --prefix=$INSTALL_PREFIX \
+            --buildtype=release \
+            --default-library=shared \
+            -Dtls_check=false \
+            -Dgssapi=disabled \
+            -Dsysprof=disabled \
+            -Dtests=false \
+            -Dintrospection=disabled \
+            -Dvapi=disabled
+          ninja -C _build -j$(nproc)
+          sudo ninja -C _build install
+
+      # ---------- libwpe ----------
+      - name: 缓存 libwpe
+        id: cache-libwpe
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.INSTALL_PREFIX }}/lib/libwpe-1.0*
+            ${{ env.INSTALL_PREFIX }}/include/wpe-1.0/
+            ${{ env.INSTALL_PREFIX }}/lib/pkgconfig/wpe-1.0.pc
+          key: wpe-libwpe-1.16.0
+
+      - name: 编译 libwpe
+        if: steps.cache-libwpe.outputs.cache-hit != 'true'
+        run: |
+          cd /tmp
+          wget -q https://github.com/WebPlatformForEmbedded/libwpe/archive/refs/tags/1.16.0.tar.gz -O libwpe.tar.gz
+          tar xf libwpe.tar.gz && cd libwpe-1.16.0
+
+          export CC="ccache aarch64-linux-gnu-gcc"
+          export CXX="ccache aarch64-linux-gnu-g++"
+          meson setup _build . \
+            --cross-file /tmp/cross-aarch64.txt \
+            --prefix=$INSTALL_PREFIX \
+            --buildtype=release
+          ninja -C _build -j$(nproc)
+          sudo ninja -C _build install
+
+      # ---------- wpebackend-fdo ----------
+      - name: 缓存 wpebackend-fdo
+        id: cache-backend
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.INSTALL_PREFIX }}/lib/libWPEBackend-fdo-1.0*
+            ${{ env.INSTALL_PREFIX }}/include/wpe-fdo-1.0/
+            ${{ env.INSTALL_PREFIX }}/lib/pkgconfig/wpebackend-fdo-1.0.pc
+          key: wpe-backend-fdo-1.14.3
+
+      - name: 编译 wpebackend-fdo
+        if: steps.cache-backend.outputs.cache-hit != 'true'
+        run: |
+          cd /tmp
+          wget -q https://github.com/Igalia/WPEBackend-fdo/archive/refs/tags/1.14.3.tar.gz -O wpebackend.tar.gz
+          tar xf wpebackend.tar.gz && cd WPEBackend-fdo-1.14.3
+
+          export CC="ccache aarch64-linux-gnu-gcc"
+          export CXX="ccache aarch64-linux-gnu-g++"
+          cmake -B _build -S . \
+            -DCMAKE_SYSTEM_NAME=Linux \
+            -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+            -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
+            -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
+            -DCMAKE_FIND_ROOT_PATH=$INSTALL_PREFIX \
+            -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build _build -j$(nproc)
+          sudo cmake --install _build
+
+      # ---------- 打包依赖产物（传给下一 job） ----------
+      - name: 上传编译好的依赖
+        uses: actions/upload-artifact@v4
+        with:
+          name: wpe-deps-aarch64
+          path: ${{ env.INSTALL_PREFIX }}
+          retention-days: 7
+
+  # ==========================================================
+  # Job 2: 交叉编译 WPE WebKit（最耗时，仅 workflow_dispatch 触发或源码变更时）
+  # ==========================================================
+  build-webkit:
+    needs: build-deps
+    runs-on: ubuntu-22.04
+    if: |
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.build_all == 'true'
+    timeout-minutes: 360   # WPE WebKit 最多 6 小时
+
+    steps:
+      - name: 安装工具链
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
+            cmake ninja-build python3 python3-jinja2 \
+            ruby bison flex gperf perl \
+            libwayland-dev wayland-protocols \
+            libdrm-dev libegl1-mesa-dev libgles2-mesa-dev \
+            ccache wget
+
+      - uses: actions/checkout@v4
+
+      - name: 下载依赖产物
+        uses: actions/download-artifact@v4
+        with:
+          name: wpe-deps-aarch64
+          path: ${{ env.INSTALL_PREFIX }}
+
+      - name: 设置 ccache（WebKit）
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: wpe-webkit-${{ runner.os }}-aarch64
+          max-size: 3G
+
+      - name: 下载并编译 WPE WebKit
+        run: |
+          cd /tmp
+          WEBKIT_VER="2.44.2"
+          if [ ! -d WPEWebKit-wpewebkit-$WEBKIT_VER ]; then
+            wget -q https://github.com/WebPlatformForEmbedded/WPEWebKit/archive/refs/tags/wpewebkit-${WEBKIT_VER}.tar.gz
+            tar xf wpewebkit-${WEBKIT_VER}.tar.gz
+          fi
+          cd WPEWebKit-wpewebkit-${WEBKIT_VER}
+
+          cmake -B _build -S . \
+            -DCMAKE_SYSTEM_NAME=Linux \
+            -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+            -DCMAKE_C_COMPILER="ccache aarch64-linux-gnu-gcc" \
+            -DCMAKE_CXX_COMPILER="ccache aarch64-linux-gnu-g++" \
+            -DCMAKE_FIND_ROOT_PATH=$INSTALL_PREFIX \
+            -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPORT=WPE \
+            -DENABLE_BUBBLEWRAP_SANDBOX=OFF \
+            -DENABLE_DOCUMENTATION=OFF \
+            -DENABLE_GAMEPAD=OFF \
+            -DENABLE_GEOLOCATION=OFF \
+            -DENABLE_GLES2=ON \
+            -DENABLE_GTKDOC=OFF \
+            -DENABLE_INTROSPECTION=OFF \
+            -DENABLE_JIT=OFF \
+            -DENABLE_MINIBROWSER=OFF \
+            -DENABLE_NOTIFICATIONS=OFF \
+            -DENABLE_SAMPLING_PROFILER=OFF \
+            -DENABLE_SPELLCHECK=OFF \
+            -DENABLE_WAYLAND_TARGET=ON \
+            -DENABLE_WEBDRIVER=OFF \
+            -DENABLE_WEB_AUDIO=OFF \
+            -DENABLE_WEB_CRYPTO=OFF \
+            -DENABLE_XSLT=ON \
+            -DUSE_EGL=ON \
+            -DUSE_GSTREAMER_GL=ON \
+            -DUSE_LIBWPE=ON \
+            -DUSE_SOUP2=ON \
+            -DUSE_WPEBACKEND_FDO=ON \
+            -Wno-dev
+
+          cmake --build _build -j$(nproc) 2>&1 | tee build.log
+          sudo cmake --install _build
+
+      - name: 上传 WPE WebKit 编译产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: wpe-webkit-aarch64
+          path: ${{ env.INSTALL_PREFIX }}
+          retention-days: 7
+
+  # ==========================================================
+  # Job 3: 编译我们的插件 .so + 打包
+  # ==========================================================
+  build-plugin:
+    needs: build-deps
+    runs-on: ubuntu-22.04
+    steps:
+      - name: 安装工具链 + Qt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
+            cmake ninja-build \
+            qtbase5-dev qtdeclarative5-dev \
+            libqt5opengl5-dev \
+            libegl1-mesa-dev libgles2-mesa-dev \
+            libwayland-dev libdrm-dev \
+            pkg-config wget unzip
+
+      - uses: actions/checkout@v4
+
+      - name: 下载依赖产物
+        uses: actions/download-artifact@v4
+        with:
+          name: wpe-deps-aarch64
+          path: ${{ env.INSTALL_PREFIX }}
+
+      # 如果 WPE WebKit Job 也完成了，就合并产物
+      - name: 尝试下载 WebKit 产物
+        uses: actions/download-artifact@v4
+        with:
+          name: wpe-webkit-aarch64
+          path: ${{ env.INSTALL_PREFIX }}
+        continue-on-error: true
+
+      - name: 交叉编译插件 .so
+        run: |
+          cd wpewebkit-browser-src
+
+          # 设置 PKG_CONFIG_PATH 指向我们的交叉编译产物
+          export PKG_CONFIG_PATH="$INSTALL_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH"
+          export PKG_CONFIG_SYSROOT_DIR="$INSTALL_PREFIX"
+
+          # 创建 CMake 交叉编译配置文件
+          cat > /tmp/toolchain-aarch64.cmake << 'EOF'
+          set(CMAKE_SYSTEM_NAME Linux)
+          set(CMAKE_SYSTEM_PROCESSOR aarch64)
+          set(CMAKE_C_COMPILER aarch64-linux-gnu-gcc)
+          set(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)
+          set(CMAKE_FIND_ROOT_PATH $ENV{INSTALL_PREFIX})
+          set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+          set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+          set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+          set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+          EOF
+
+          # 用 CMake 直接构建（不用 xmake，避免额外依赖）
+          cmake -B _build -S . \
+            -DCMAKE_TOOLCHAIN_FILE=/tmp/toolchain-aarch64.cmake \
+            -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
+            -DCMAKE_BUILD_TYPE=Release
+
+          cmake --build _build -j$(nproc)
+
+          mkdir -p /tmp/plugin-output
+          cp _build/libwpewebkit_browser.so /tmp/plugin-output/
+
+      - name: 打包插件完整部署包
+        run: |
+          mkdir -p /tmp/release/wpewebkit-browser
+
+          # 插件 QML 文件
+          cp -r wpewebkit-browser/*.qml wpewebkit-browser/metadata.json \
+                /tmp/release/wpewebkit-browser/
+
+          # 编译好的 .so
+          mkdir -p /tmp/release/wpe-libs
+          cp /tmp/plugin-output/libwpewebkit_browser.so /tmp/release/wpewebkit-browser/
+          cp $INSTALL_PREFIX/lib/*.so.* $INSTALL_PREFIX/lib/*.so \
+             /tmp/release/wpe-libs/ 2>/dev/null || true
+
+          # 部署脚本
+          cat > /tmp/release/deploy.sh << 'DEPLOY'
+          #!/bin/sh
+          # 在设备上执行（通过 ADB shell）
+          DEVICE_ROOT="/userdisk/PenMods"
+          echo "部署 WPE 浏览器插件到设备..."
+
+          # 部署依赖库
+          mkdir -p $DEVICE_ROOT/wpe-libs
+          cp /tmp/wpe-libs/* $DEVICE_ROOT/wpe-libs/ 2>/dev/null
+
+          # 部署插件
+          rm -rf $DEVICE_ROOT/plugins/wpewebkit-browser
+          cp -r /tmp/wpewebkit-browser $DEVICE_ROOT/plugins/
+
+          # 设置库路径
+          if ! grep -q "wpe-libs" /userdisk/.profile 2>/dev/null; then
+            echo "export LD_LIBRARY_PATH=$DEVICE_ROOT/wpe-libs:\$LD_LIBRARY_PATH" >> /userdisk/.profile
+          fi
+
+          echo "部署完成！重启 PenMods 即可使用。"
+          DEPLOY
+          chmod +x /tmp/release/deploy.sh
+
+          ls -la /tmp/release/
+          ls -la /tmp/release/wpewebkit-browser/
+          ls -la /tmp/release/wpe-libs/
+
+      - name: 上传最终产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: wpewebkit-browser-release
+          path: /tmp/release/
+          retention-days: 30
+
+      - name: 上传单独插件 .so
+        uses: actions/upload-artifact@v4
+        with:
+          name: libwpewebkit_browser.so
+          path: /tmp/plugin-output/
+          retention-days: 30

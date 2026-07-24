@@ -1,0 +1,58 @@
+# 编译产物
+*.o
+*.obj
+*.so
+*.a
+*.exe
+*.dll
+*.exp
+*.lib
+*.pdb
+
+# 构建目录
+build/
+_build/
+out/
+dist/
+*.build/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.pro.user*
+*.swp
+*.swo
+*~
+
+# Qt/QML
+moc_*
+qrc_*
+*.qm
+
+# Node/Python
+node_modules/
+__pycache__/
+*.pyc
+
+# 操作系统
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# 环境文件
+.env
+.env.*
+
+# 大型第三方
+*.tar.gz
+*.tar.xz
+*.zip
+gstreamer/
+go_server/
+
+# 空 .so 占位（源码目录内）
+*/lib*.so
+
+# 日志
+*.log
