@@ -35,13 +35,12 @@ jobs:
             gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
             binutils-aarch64-linux-gnu \
             cmake meson ninja-build pkg-config \
-            libglib2.0-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            libglib2.0-dev \
             libwayland-dev wayland-protocols \
             libxkbcommon-dev libdrm-dev \
             libxml2-dev libsqlite3-dev \
             libjpeg-dev libpng-dev \
             python3 python3-pip python3-jinja2 \
-            ruby bison flex gperf perl \
             ccache wget curl
 
           # 验证
