@@ -108,9 +108,7 @@ jobs:
           pkgconfig = 'pkg-config'
 
           [properties]
-          sys_root = '/usr/aarch64-linux-gnu'
           pkg_config_libdir = '/usr/lib/x86_64-linux-gnu/pkgconfig:${{ env.INSTALL_PREFIX }}/lib/pkgconfig'
-          c_args = ['-Wno-unused-parameter']
 
           [host_machine]
           system = 'linux'
