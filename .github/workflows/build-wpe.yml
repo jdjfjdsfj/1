@@ -35,18 +35,65 @@ jobs:
             gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
             binutils-aarch64-linux-gnu \
             cmake meson ninja-build pkg-config \
-            libglib2.0-dev \
+            libglib2.0-dev libxml2-dev libsqlite3-dev \
             libwayland-dev wayland-protocols \
             libxkbcommon-dev libdrm-dev \
-            libxml2-dev libsqlite3-dev \
             libjpeg-dev libpng-dev \
             python3 python3-pip python3-jinja2 \
-            ccache wget curl
-
-          # 验证
-          aarch64-linux-gnu-gcc --version
+            ccache wget curl dpkg-dev
 
       - uses: actions/checkout@v4
+
+      - name: 从 Ubuntu Ports 下载 arm64 .so 库到 sysroot
+        run: |
+          SYSROOT="/usr/aarch64-linux-gnu"
+          sudo mkdir -p "$SYSROOT/lib" "$SYSROOT/include"
+
+          # 从 ports.ubuntu.com 下载 arm64 预编译 .deb 并提取 .so
+          extract_deb() {
+            local url="$1"
+            local name="${url##*/}"
+            cd /tmp
+            wget -q "$url" -O "$name"
+            dpkg-deb -x "$name" /tmp/arm64-pkg
+            sudo cp -n /tmp/arm64-pkg/usr/lib/aarch64-linux-gnu/*.so* "$SYSROOT/lib/" 2>/dev/null || true
+            sudo cp -n /tmp/arm64-pkg/lib/aarch64-linux-gnu/*.so* "$SYSROOT/lib/" 2>/dev/null || true
+            # headers (if any)
+            if [ -d /tmp/arm64-pkg/usr/include ]; then
+              sudo cp -rn /tmp/arm64-pkg/usr/include/* "$SYSROOT/include/" 2>/dev/null || true
+            fi
+            rm -rf /tmp/arm64-pkg
+          }
+
+          PORTS="http://ports.ubuntu.com/pool/main"
+          SECURITY="http://ports.ubuntu.com/pool/main"
+
+          # glib 核心
+          extract_deb "$PORTS/g/glib2.0/libglib2.0-0_2.72.4-0ubuntu2.9_arm64.deb"
+          extract_deb "$PORTS/g/glib2.0/libgmodule-2.0-0_2.72.4-0ubuntu2.9_arm64.deb"
+          extract_deb "$PORTS/g/glib2.0/libgobject-2.0-0_2.72.4-0ubuntu2.9_arm64.deb"
+          extract_deb "$PORTS/g/glib2.0/libgio-2.0-0_2.72.4-0ubuntu2.9_arm64.deb"
+
+          # glib 依赖
+          extract_deb "$PORTS/libf/libffi/libffi8_3.4.2-4_arm64.deb"
+          extract_deb "$PORTS/p/pcre2/libpcre2-8-0_10.39-3ubuntu0.1_arm64.deb"
+          extract_deb "$PORTS/z/zlib/zlib1g_1.2.11.dfsg-2ubuntu9.2_arm64.deb"
+
+          # xml/sqlite
+          extract_deb "$PORTS/libx/libxml2/libxml2_2.9.13+dfsg-1ubuntu0.12_arm64.deb"
+          extract_deb "$PORTS/s/sqlite3/libsqlite3-0_3.37.2-2ubuntu0.7_arm64.deb"
+
+          # wayland
+          extract_deb "$PORTS/w/wayland/libwayland-client0_1.20.0-1ubuntu0.1_arm64.deb"
+          extract_deb "$PORTS/w/wayland/libwayland-server0_1.20.0-1ubuntu0.1_arm64.deb"
+          extract_deb "$PORTS/w/wayland/libwayland-egl1_1.20.0-1ubuntu0.1_arm64.deb"
+
+          # drm + xkb
+          extract_deb "$PORTS/libd/libdrm/libdrm2_2.4.113-2~ubuntu0.22.04.1_arm64.deb"
+          extract_deb "$PORTS/libx/libxkbcommon/libxkbcommon0_1.4.0-1_arm64.deb"
+
+          echo "===  sysroot 准备完毕 ==="
+          ls -la "$SYSROOT/lib/"*.so* | head -20
 
       - name: 设置 ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -56,12 +103,6 @@ jobs:
 
       - name: 创建交叉编译 meson 配置文件
         run: |
-          # 启用 arm64 多架构支持（用于安装 arm64 版头文件和 pkg-config）
-          sudo dpkg --add-architecture arm64
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            libglib2.0-dev:arm64 libxml2-dev:arm64 libsqlite3-dev:arm64
-
           mkdir -p $INSTALL_PREFIX/lib/pkgconfig
           cat > /tmp/cross-aarch64.txt << 'MESONEOF'
           [binaries]
@@ -72,7 +113,9 @@ jobs:
           pkgconfig = 'pkg-config'
 
           [properties]
-          pkg_config_libdir = '/usr/lib/aarch64-linux-gnu/pkgconfig;${{ env.INSTALL_PREFIX }}/lib/pkgconfig'
+          sys_root = '/usr/aarch64-linux-gnu'
+          pkg_config_libdir = '/usr/lib/x86_64-linux-gnu/pkgconfig:${{ env.INSTALL_PREFIX }}/lib/pkgconfig'
+          c_args = ['-Wno-unused-parameter']
 
           [host_machine]
           system = 'linux'
@@ -81,7 +124,7 @@ jobs:
           endian = 'little'
           MESONEOF
 
-      # ---------- libsoup2 (WebKit HTTP 层) ----------
+      # ---------- libsoup2 ----------
       - name: 缓存 libsoup2
         id: cache-libsoup
         uses: actions/cache@v4
@@ -90,7 +133,7 @@ jobs:
             ${{ env.INSTALL_PREFIX }}/lib/libsoup-2.4*
             ${{ env.INSTALL_PREFIX }}/include/libsoup-2.4/
             ${{ env.INSTALL_PREFIX }}/lib/pkgconfig/libsoup-2.4.pc
-          key: wpe-libsoup-2.74.3
+          key: wpe-libsoup-2.74.3-v2
 
       - name: 编译 libsoup2
         if: steps.cache-libsoup.outputs.cache-hit != 'true'
@@ -99,8 +142,6 @@ jobs:
           wget -q https://download.gnome.org/sources/libsoup/2.74/libsoup-2.74.3.tar.xz
           tar xf libsoup-2.74.3.tar.xz && cd libsoup-2.74.3
 
-          export CC="ccache aarch64-linux-gnu-gcc"
-          export CXX="ccache aarch64-linux-gnu-g++"
           meson setup _build . \
             --cross-file /tmp/cross-aarch64.txt \
             --prefix=$INSTALL_PREFIX \
@@ -124,7 +165,7 @@ jobs:
             ${{ env.INSTALL_PREFIX }}/lib/libwpe-1.0*
             ${{ env.INSTALL_PREFIX }}/include/wpe-1.0/
             ${{ env.INSTALL_PREFIX }}/lib/pkgconfig/wpe-1.0.pc
-          key: wpe-libwpe-1.16.0
+          key: wpe-libwpe-1.16.0-v2
 
       - name: 编译 libwpe
         if: steps.cache-libwpe.outputs.cache-hit != 'true'
@@ -133,8 +174,6 @@ jobs:
           wget -q https://github.com/WebPlatformForEmbedded/libwpe/archive/refs/tags/1.16.0.tar.gz -O libwpe.tar.gz
           tar xf libwpe.tar.gz && cd libwpe-1.16.0
 
-          export CC="ccache aarch64-linux-gnu-gcc"
-          export CXX="ccache aarch64-linux-gnu-g++"
           meson setup _build . \
             --cross-file /tmp/cross-aarch64.txt \
             --prefix=$INSTALL_PREFIX \
@@ -151,7 +190,7 @@ jobs:
             ${{ env.INSTALL_PREFIX }}/lib/libWPEBackend-fdo-1.0*
             ${{ env.INSTALL_PREFIX }}/include/wpe-fdo-1.0/
             ${{ env.INSTALL_PREFIX }}/lib/pkgconfig/wpebackend-fdo-1.0.pc
-          key: wpe-backend-fdo-1.14.3
+          key: wpe-backend-fdo-1.14.3-v2
 
       - name: 编译 wpebackend-fdo
         if: steps.cache-backend.outputs.cache-hit != 'true'
@@ -160,8 +199,6 @@ jobs:
           wget -q https://github.com/Igalia/WPEBackend-fdo/archive/refs/tags/1.14.3.tar.gz -O wpebackend.tar.gz
           tar xf wpebackend.tar.gz && cd WPEBackend-fdo-1.14.3
 
-          export CC="ccache aarch64-linux-gnu-gcc"
-          export CXX="ccache aarch64-linux-gnu-g++"
           cmake -B _build -S . \
             -DCMAKE_SYSTEM_NAME=Linux \
             -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
@@ -173,7 +210,6 @@ jobs:
           cmake --build _build -j$(nproc)
           sudo cmake --install _build
 
-      # ---------- 打包依赖产物（传给下一 job） ----------
       - name: 上传编译好的依赖
         uses: actions/upload-artifact@v4
         with:
