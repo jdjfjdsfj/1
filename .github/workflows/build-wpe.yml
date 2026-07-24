@@ -110,6 +110,9 @@ jobs:
           [properties]
           pkg_config_libdir = '/usr/lib/x86_64-linux-gnu/pkgconfig:${{ env.INSTALL_PREFIX }}/lib/pkgconfig'
 
+          [built-in options]
+          c_link_args = ['-L/usr/aarch64-linux-gnu/lib', '-Wl,-rpath-link=/usr/aarch64-linux-gnu/lib']
+
           [host_machine]
           system = 'linux'
           cpu_family = 'aarch64'
