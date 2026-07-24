@@ -99,19 +99,26 @@ jobs:
       - name: 创建交叉编译 meson 配置文件
         run: |
           mkdir -p $INSTALL_PREFIX/lib/pkgconfig
+
+          # pkg-config 包装脚本：将 x86_64 lib 路径重写为 arm64 sysroot 路径
+          cat > /tmp/pkg-config-arm64.sh << 'SCRIPT'
+          #!/bin/bash
+          exec /usr/bin/pkg-config "$@" \
+            | sed 's|/usr/lib/x86_64-linux-gnu|/usr/aarch64-linux-gnu/lib|g' \
+            | sed 's|-L/usr/lib/ |-L/usr/aarch64-linux-gnu/lib |g'
+          SCRIPT
+          chmod +x /tmp/pkg-config-arm64.sh
+
           cat > /tmp/cross-aarch64.txt << 'MESONEOF'
           [binaries]
           c = 'aarch64-linux-gnu-gcc'
           cpp = 'aarch64-linux-gnu-g++'
           ar = 'aarch64-linux-gnu-ar'
           strip = 'aarch64-linux-gnu-strip'
-          pkgconfig = 'pkg-config'
+          pkgconfig = '/tmp/pkg-config-arm64.sh'
 
           [properties]
           pkg_config_libdir = '/usr/lib/x86_64-linux-gnu/pkgconfig:${{ env.INSTALL_PREFIX }}/lib/pkgconfig'
-
-          [built-in options]
-          c_link_args = ['-L/usr/aarch64-linux-gnu/lib', '-Wl,-rpath-link=/usr/aarch64-linux-gnu/lib']
 
           [host_machine]
           system = 'linux'
