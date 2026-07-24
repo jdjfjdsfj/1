@@ -56,6 +56,12 @@ jobs:
 
       - name: 创建交叉编译 meson 配置文件
         run: |
+          # 启用 arm64 多架构支持（用于安装 arm64 版头文件和 pkg-config）
+          sudo dpkg --add-architecture arm64
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libglib2.0-dev:arm64 libxml2-dev:arm64 libsqlite3-dev:arm64
+
           mkdir -p $INSTALL_PREFIX/lib/pkgconfig
           cat > /tmp/cross-aarch64.txt << 'MESONEOF'
           [binaries]
@@ -63,10 +69,10 @@ jobs:
           cpp = 'aarch64-linux-gnu-g++'
           ar = 'aarch64-linux-gnu-ar'
           strip = 'aarch64-linux-gnu-strip'
-          pkgconfig = 'aarch64-linux-gnu-pkg-config'
+          pkgconfig = 'pkg-config'
 
           [properties]
-          pkg_config_libdir = '${{ env.INSTALL_PREFIX }}/lib/pkgconfig'
+          pkg_config_libdir = '/usr/lib/aarch64-linux-gnu/pkgconfig;${{ env.INSTALL_PREFIX }}/lib/pkgconfig'
 
           [host_machine]
           system = 'linux'
