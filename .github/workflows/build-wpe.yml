@@ -147,9 +147,7 @@ jobs:
             -Dsysprof=disabled \
             -Dtests=false \
             -Dintrospection=disabled \
-            -Dvapi=disabled \
-            -Dbrotlidec=disabled \
-            -Dntlm=disabled
+            -Dvapi=disabled
           ninja -C _build -j$(nproc)
           sudo ninja -C _build install
 
