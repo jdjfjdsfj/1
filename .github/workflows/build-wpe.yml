@@ -64,21 +64,23 @@ jobs:
           endian = 'little'
           EOF
 
-      # ---------- libsoup2 ----------
-      - name: 编译 libsoup2
+      # ---------- libsoup2 (从 Ubuntu Ports 下载预编译 arm64 deb，避免 glib_mkenums 交叉编译问题) ----------
+      - name: 下载 libsoup2
         run: |
+          pacman -S --noconfirm dpkg
+          cat > /etc/apt/sources.list.d/arm64-ports.list << 'SRC'
+          deb [arch=arm64] http://ports.ubuntu.com jammy main universe
+          deb [arch=arm64] http://ports.ubuntu.com jammy-updates main universe
+          SRC
           cd /tmp
-          wget -q https://download.gnome.org/sources/libsoup/2.74/libsoup-2.74.3.tar.xz
-          tar xf libsoup-2.74.3.tar.xz && cd libsoup-2.74.3
-          meson setup _build . \
-            --cross-file /tmp/cross-aarch64.txt \
-            --prefix=$INSTALL_PREFIX \
-            --buildtype=release \
-            --default-library=shared \
-            -Dtls_check=false -Dgssapi=disabled -Dsysprof=disabled \
-            -Dtests=false -Dintrospection=disabled -Dvapi=disabled
-          ninja -C _build -j$(nproc)
-          ninja -C _build install
+          apt-get update -o Dir::Etc::sourcelist="sources.list.d/arm64-ports.list" -o Dir::Etc::sourceparts="-" 2>/dev/null || true
+          apt-get download libsoup2.4-1:arm64 libsoup2.4-dev:arm64 2>/dev/null || true
+          for deb in *.deb; do dpkg-deb -x "$deb" /tmp/soup-root; done
+          cp /tmp/soup-root/usr/lib/aarch64-linux-gnu/libsoup-2.4.so* $INSTALL_PREFIX/lib/ 2>/dev/null || true
+          cp -r /tmp/soup-root/usr/include/libsoup-2.4 $INSTALL_PREFIX/include/ 2>/dev/null || true
+          cp /tmp/soup-root/usr/lib/aarch64-linux-gnu/pkgconfig/libsoup-2.4.pc $INSTALL_PREFIX/lib/pkgconfig/ 2>/dev/null || true
+          # 修正 pkg-config 路径
+          sed -i "s|prefix=/usr|prefix=$INSTALL_PREFIX|g" $INSTALL_PREFIX/lib/pkgconfig/libsoup-2.4.pc 2>/dev/null || true
 
       # ---------- libwpe ----------
       - name: 编译 libwpe
