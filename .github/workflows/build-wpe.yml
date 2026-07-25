@@ -126,6 +126,9 @@ jobs:
           [properties]
           pkg_config_libdir = '/usr/lib/x86_64-linux-gnu/pkgconfig:${{ env.INSTALL_PREFIX }}/lib/pkgconfig'
 
+          [built-in options]
+          c_link_args = ['-Wl,--allow-shlib-undefined']
+
           [host_machine]
           system = 'linux'
           cpu_family = 'aarch64'
