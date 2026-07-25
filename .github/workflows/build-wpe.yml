@@ -100,12 +100,13 @@ jobs:
         run: |
           mkdir -p $INSTALL_PREFIX/lib/pkgconfig
 
-          # pkg-config 包装脚本：将 x86_64 lib 路径重写为 arm64 sysroot 路径
+          # pkg-config wrapper: rewrite only -L and rpath to arm64, leave -I unchanged
           cat > /tmp/pkg-config-arm64.sh << 'SCRIPT'
           #!/bin/bash
           exec /usr/bin/pkg-config "$@" \
-            | sed 's|/usr/lib/x86_64-linux-gnu|/usr/aarch64-linux-gnu/lib|g' \
-            | sed 's|-L/usr/lib/ |-L/usr/aarch64-linux-gnu/lib |g'
+            | sed 's|\(-L\)/usr/lib/x86_64-linux-gnu\b|\1/usr/aarch64-linux-gnu/lib|g' \
+            | sed 's|\(-Wl,-rpath,\)/usr/lib/x86_64-linux-gnu\b|\1/usr/aarch64-linux-gnu/lib|g' \
+            | sed 's|\(-Wl,-rpath-link,\)/usr/lib/x86_64-linux-gnu\b|\1/usr/aarch64-linux-gnu/lib|g'
           SCRIPT
           chmod +x /tmp/pkg-config-arm64.sh
 
