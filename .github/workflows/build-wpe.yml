@@ -186,8 +186,6 @@ jobs:
             --buildtype=release
           ninja -C _build -j$(nproc)
           sudo ninja -C _build install
-          cmake --build _build -j$(nproc)
-          sudo cmake --install _build
 
       - name: 上传编译好的依赖
         uses: actions/upload-artifact@v4
