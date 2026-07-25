@@ -44,7 +44,7 @@ jobs:
       - name: 创建 meson cross file
         run: |
           mkdir -p $INSTALL_PREFIX/lib/pkgconfig
-          cat > /tmp/cross-aarch64.txt << 'EOF'
+          cat > /tmp/cross-aarch64.txt <<EOF
           [binaries]
           c = '/usr/bin/aarch64-linux-gnu-gcc'
           cpp = '/usr/bin/aarch64-linux-gnu-g++'
@@ -56,7 +56,7 @@ jobs:
           gdbus_codegen = '/usr/bin/gdbus-codegen'
 
           [properties]
-          pkg_config_libdir = '/usr/lib/pkgconfig:${{ env.INSTALL_PREFIX }}/lib/pkgconfig'
+          pkg_config_libdir = '/usr/lib/pkgconfig:$INSTALL_PREFIX/lib/pkgconfig'
 
           [host_machine]
           system = 'linux'
@@ -105,31 +105,55 @@ jobs:
           ninja -C _build -j$(nproc)
           ninja -C _build install
 
-      # ---------- wpebackend-fdo (下载预编译 arm64 deb) ----------
-      - name: 下载 wpebackend-fdo
+      # ---------- EGL/GLES 头文件 + wpebackend-fdo (预编译 arm64 deb) ----------
+      - name: 下载 EGL/GLES 头文件 + wpebackend-fdo
         run: |
           mkdir -p $INSTALL_PREFIX/lib/pkgconfig $INSTALL_PREFIX/lib $INSTALL_PREFIX/include
           cd /tmp
 
-          # wpebackend-fdo 可能在 Ubuntu universe 仓库
-          BASE="http://ports.ubuntu.com/pool/universe/w/wpebackend-fdo"
+          # 下载 arm64 Mesa dev debs（提供 EGL/GLES 头文件）
+          MESA="http://ports.ubuntu.com/pool/main/m/mesa"
+          for ver in 24.0.0-1 23.3.4-1 23.2.1-1 23.0.0-1 22.2.6-1; do
+            wget -q "$MESA/libegl1-mesa-dev_${ver}_arm64.deb" && break || true
+          done
+          for ver in 24.0.0-1 23.3.4-1 23.2.1-1 23.0.0-1 22.2.6-1; do
+            wget -q "$MESA/libgles2-mesa-dev_${ver}_arm64.deb" && break || true
+          done
+
+          # 下载 wpebackend-fdo arm64 deb
+          WPEBE="http://ports.ubuntu.com/pool/universe/w/wpebackend-fdo"
           for ver in 1.14.0-1 1.14.3-1 1.12.0-1 1.10.0-1; do
-            wget -q "$BASE/libwpebackend-fdo-1.0-1_${ver}_arm64.deb" && break
+            wget -q "$WPEBE/libwpebackend-fdo-1.0-1_${ver}_arm64.deb" && break || true
           done
           for ver in 1.14.0-1 1.14.3-1 1.12.0-1 1.10.0-1; do
-            wget -q "$BASE/libwpebackend-fdo-1.0-dev_${ver}_arm64.deb" && break
+            wget -q "$WPEBE/libwpebackend-fdo-1.0-dev_${ver}_arm64.deb" && break || true
           done
 
-          mkdir -p /tmp/wpe-root
-          for deb in *.deb; do dpkg-deb -x "$deb" /tmp/wpe-root 2>/dev/null || true; done
+          # 提取所有 deb
+          for deb in *.deb; do
+            dpkg-deb -x "$deb" /tmp/extract 2>/dev/null || true
+          done
 
-          cp /tmp/wpe-root/usr/lib/aarch64-linux-gnu/libWPEBackend-fdo-1.0.so* $INSTALL_PREFIX/lib/ 2>/dev/null || true
-          cp -r /tmp/wpe-root/usr/include/wpe-fdo-1.0 $INSTALL_PREFIX/include/ 2>/dev/null || true
-          cp /tmp/wpe-root/usr/lib/aarch64-linux-gnu/pkgconfig/wpebackend-fdo-1.0.pc $INSTALL_PREFIX/lib/pkgconfig/ 2>/dev/null || true
-          [ -f "$INSTALL_PREFIX/lib/pkgconfig/wpebackend-fdo-1.0.pc" ] && \
-            sed -i "s|prefix=/usr|prefix=$INSTALL_PREFIX|g" "$INSTALL_PREFIX/lib/pkgconfig/wpebackend-fdo-1.0.pc"
+          # 拷贝 EGL/GLES 头文件到 sysroot
+          cp -r /tmp/extract/usr/include/EGL $INSTALL_PREFIX/include/ 2>/dev/null || true
+          cp -r /tmp/extract/usr/include/GLES2 $INSTALL_PREFIX/include/ 2>/dev/null || true
+          cp -r /tmp/extract/usr/include/GLES3 $INSTALL_PREFIX/include/ 2>/dev/null || true
+          cp -r /tmp/extract/usr/include/KHR $INSTALL_PREFIX/include/ 2>/dev/null || true
 
-          ls $INSTALL_PREFIX/lib/libWPEBackend* || echo "WARNING: wpebackend-fdo .so not found"
+          # 拷贝 pkg-config .pc 文件
+          cp /tmp/extract/usr/lib/aarch64-linux-gnu/pkgconfig/*.pc $INSTALL_PREFIX/lib/pkgconfig/ 2>/dev/null || true
+
+          # 拷贝 wpebackend-fdo .so 和头文件
+          cp /tmp/extract/usr/lib/aarch64-linux-gnu/libWPEBackend-fdo-1.0.so* $INSTALL_PREFIX/lib/ 2>/dev/null || true
+          cp -r /tmp/extract/usr/include/wpe-fdo-1.0 $INSTALL_PREFIX/include/ 2>/dev/null || true
+
+          # 修正所有 pkg-config prefix
+          for pc in $INSTALL_PREFIX/lib/pkgconfig/*.pc; do
+            [ -f "$pc" ] && sed -i "s|prefix=/usr|prefix=$INSTALL_PREFIX|g" "$pc"
+          done
+
+          echo "=== EGL headers ===" && ls $INSTALL_PREFIX/include/EGL/ 2>/dev/null || echo "MISSING"
+          echo "=== WPEBackend ===" && ls $INSTALL_PREFIX/lib/libWPEBackend* 2>/dev/null || echo "MISSING"
 
       - name: 上传依赖产物
         uses: actions/upload-artifact@v4
