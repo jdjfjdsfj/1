@@ -25,7 +25,7 @@ jobs:
           pacman -Syu --noconfirm
           pacman -S --noconfirm \
             base-devel git wget curl cmake meson ninja python3 python-pip \
-            pkgconf glib2 libxml2 sqlite3 libpsl
+            pkgconf glib2 glib2-docs libxml2 sqlite3 libpsl
 
           # 安装 GCC 6.5.0 交叉工具链 (glibc 2.27)
           cd /tmp
@@ -50,6 +50,9 @@ jobs:
           ar = '/usr/bin/aarch64-linux-gnu-ar'
           strip = '/usr/bin/aarch64-linux-gnu-strip'
           pkgconfig = '/usr/bin/pkg-config'
+          glib_mkenums = '/usr/bin/glib-mkenums'
+          glib_compile_resources = '/usr/bin/glib-compile-resources'
+          gdbus_codegen = '/usr/bin/gdbus-codegen'
 
           [properties]
           pkg_config_libdir = '/usr/lib/pkgconfig:${{ env.INSTALL_PREFIX }}/lib/pkgconfig'
