@@ -139,18 +139,7 @@ jobs:
           MESONEOF
 
       # ---------- libsoup2 ----------
-      - name: 缓存 libsoup2
-        id: cache-libsoup
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.INSTALL_PREFIX }}/lib/libsoup-2.4*
-            ${{ env.INSTALL_PREFIX }}/include/libsoup-2.4/
-            ${{ env.INSTALL_PREFIX }}/lib/pkgconfig/libsoup-2.4.pc
-          key: wpe-libsoup-2.74.3-v2
-
       - name: 编译 libsoup2
-        if: steps.cache-libsoup.outputs.cache-hit != 'true'
         run: |
           cd /tmp
           wget -q https://download.gnome.org/sources/libsoup/2.74/libsoup-2.74.3.tar.xz
@@ -171,18 +160,7 @@ jobs:
           sudo ninja -C _build install
 
       # ---------- libwpe ----------
-      - name: 缓存 libwpe
-        id: cache-libwpe
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.INSTALL_PREFIX }}/lib/libwpe-1.0*
-            ${{ env.INSTALL_PREFIX }}/include/wpe-1.0/
-            ${{ env.INSTALL_PREFIX }}/lib/pkgconfig/wpe-1.0.pc
-          key: wpe-libwpe-1.16.0-v2
-
       - name: 编译 libwpe
-        if: steps.cache-libwpe.outputs.cache-hit != 'true'
         run: |
           cd /tmp
           wget -q https://github.com/WebPlatformForEmbedded/libwpe/archive/refs/tags/1.16.0.tar.gz -O libwpe.tar.gz
@@ -196,18 +174,7 @@ jobs:
           sudo ninja -C _build install
 
       # ---------- wpebackend-fdo ----------
-      - name: 缓存 wpebackend-fdo
-        id: cache-backend
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.INSTALL_PREFIX }}/lib/libWPEBackend-fdo-1.0*
-            ${{ env.INSTALL_PREFIX }}/include/wpe-fdo-1.0/
-            ${{ env.INSTALL_PREFIX }}/lib/pkgconfig/wpebackend-fdo-1.0.pc
-          key: wpe-backend-fdo-1.14.3-v2
-
       - name: 编译 wpebackend-fdo
-        if: steps.cache-backend.outputs.cache-hit != 'true'
         run: |
           cd /tmp
           wget -q https://github.com/Igalia/WPEBackend-fdo/archive/refs/tags/1.14.3.tar.gz -O wpebackend.tar.gz
