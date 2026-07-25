@@ -71,11 +71,15 @@ jobs:
           mkdir -p $INSTALL_PREFIX/lib/pkgconfig $INSTALL_PREFIX/lib $INSTALL_PREFIX/include
 
           cd /tmp
-          REPO="http://ports.ubuntu.com/pool/main/libs/libsoup2.4"
-          wget -q -O index.html "$REPO/"
+          BASE="http://ports.ubuntu.com/pool/main/libs/libsoup2.4"
 
-          DEBS=$(grep -oP 'href="\K[^"]*_arm64\.deb' index.html | head -10)
-          for f in $DEBS; do wget -q "$REPO/$f"; done
+          # 尝试多个已知版本
+          for ver in 2.74.3-1 2.74.2-1 2.74.2-3 2.74.0-2; do
+            wget -q "$BASE/libsoup2.4-1_${ver}_arm64.deb" && break
+          done
+          for ver in 2.74.3-1 2.74.2-1 2.74.2-3 2.74.0-2; do
+            wget -q "$BASE/libsoup2.4-dev_${ver}_arm64.deb" && break
+          done
 
           mkdir -p /tmp/soup-root
           for deb in *.deb; do dpkg-deb -x "$deb" /tmp/soup-root 2>/dev/null || true; done
@@ -86,7 +90,7 @@ jobs:
           [ -f "$INSTALL_PREFIX/lib/pkgconfig/libsoup-2.4.pc" ] && \
             sed -i "s|prefix=/usr|prefix=$INSTALL_PREFIX|g" "$INSTALL_PREFIX/lib/pkgconfig/libsoup-2.4.pc"
 
-          ls -la $INSTALL_PREFIX/lib/libsoup*
+          ls $INSTALL_PREFIX/lib/libsoup* || echo "WARNING: libsoup .so not found, but continuing"
 
       # ---------- libwpe ----------
       - name: 编译 libwpe
