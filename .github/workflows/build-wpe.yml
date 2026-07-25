@@ -100,7 +100,7 @@ jobs:
       - name: 设置 ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: wpe-deps-${{ runner.os }}-aarch64
+          key: wpe-deps-${{ runner.os }}-aarch64-v1
           max-size: 2G
 
       - name: 创建交叉编译 meson 配置文件
