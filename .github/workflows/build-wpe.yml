@@ -64,23 +64,29 @@ jobs:
           endian = 'little'
           EOF
 
-      # ---------- libsoup2 (从 Ubuntu Ports 下载预编译 arm64 deb，避免 glib_mkenums 交叉编译问题) ----------
+      # ---------- libsoup2 (直接 wget 下载 arm64 deb，不依赖 apt-get) ----------
       - name: 下载 libsoup2
         run: |
-          pacman -S --noconfirm dpkg
-          cat > /etc/apt/sources.list.d/arm64-ports.list << 'SRC'
-          deb [arch=arm64] http://ports.ubuntu.com jammy main universe
-          deb [arch=arm64] http://ports.ubuntu.com jammy-updates main universe
-          SRC
+          pacman -S --noconfirm dpkg wget ca-certificates
+          mkdir -p $INSTALL_PREFIX/lib/pkgconfig $INSTALL_PREFIX/lib $INSTALL_PREFIX/include
+
           cd /tmp
-          apt-get update -o Dir::Etc::sourcelist="sources.list.d/arm64-ports.list" -o Dir::Etc::sourceparts="-" 2>/dev/null || true
-          apt-get download libsoup2.4-1:arm64 libsoup2.4-dev:arm64 2>/dev/null || true
-          for deb in *.deb; do dpkg-deb -x "$deb" /tmp/soup-root; done
+          REPO="http://ports.ubuntu.com/pool/main/libs/libsoup2.4"
+          wget -q -O index.html "$REPO/"
+
+          DEBS=$(grep -oP 'href="\K[^"]*_arm64\.deb' index.html | head -10)
+          for f in $DEBS; do wget -q "$REPO/$f"; done
+
+          mkdir -p /tmp/soup-root
+          for deb in *.deb; do dpkg-deb -x "$deb" /tmp/soup-root 2>/dev/null || true; done
+
           cp /tmp/soup-root/usr/lib/aarch64-linux-gnu/libsoup-2.4.so* $INSTALL_PREFIX/lib/ 2>/dev/null || true
           cp -r /tmp/soup-root/usr/include/libsoup-2.4 $INSTALL_PREFIX/include/ 2>/dev/null || true
           cp /tmp/soup-root/usr/lib/aarch64-linux-gnu/pkgconfig/libsoup-2.4.pc $INSTALL_PREFIX/lib/pkgconfig/ 2>/dev/null || true
-          # 修正 pkg-config 路径
-          sed -i "s|prefix=/usr|prefix=$INSTALL_PREFIX|g" $INSTALL_PREFIX/lib/pkgconfig/libsoup-2.4.pc 2>/dev/null || true
+          [ -f "$INSTALL_PREFIX/lib/pkgconfig/libsoup-2.4.pc" ] && \
+            sed -i "s|prefix=/usr|prefix=$INSTALL_PREFIX|g" "$INSTALL_PREFIX/lib/pkgconfig/libsoup-2.4.pc"
+
+          ls -la $INSTALL_PREFIX/lib/libsoup*
 
       # ---------- libwpe ----------
       - name: 编译 libwpe
