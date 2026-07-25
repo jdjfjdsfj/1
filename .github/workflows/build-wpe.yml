@@ -82,10 +82,15 @@ jobs:
           extract_deb libdrm2
           extract_deb libxkbcommon0
           extract_deb libpsl5
+          extract_deb libbrotli1
 
           # 清理 arm64 源
           sudo rm /etc/apt/sources.list.d/arm64-ports.list
           sudo rm /etc/apt/sources.list.d/arm64-ports.list 2>/dev/null || true
+
+          # 为所有 .so.N 创建 .so 符号链接（链接器需要 -lxml2 找到 libxml2.so）
+          cd "$SYSROOT/lib"
+          for f in *.so.*; do [ -f "$f" ] || continue; base="${f%%.so.*}.so"; [ -e "$base" ] || sudo ln -sf "$f" "$base"; done
 
           echo "=== sysroot ==="  
           ls -la "$SYSROOT/lib/"*.so* | head -20
