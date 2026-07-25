@@ -39,6 +39,7 @@ jobs:
             libwayland-dev wayland-protocols \
             libxkbcommon-dev libdrm-dev \
             libjpeg-dev libpng-dev libpsl-dev \
+            libegl1-mesa-dev libgles2-mesa-dev \
             python3 python3-pip python3-jinja2 \
             ccache wget curl dpkg-dev
 
