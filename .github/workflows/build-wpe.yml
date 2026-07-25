@@ -210,7 +210,7 @@ jobs:
         run: |
           cd /tmp
           wget -q https://github.com/Igalia/WPEBackend-fdo/archive/refs/tags/1.14.3.tar.gz -O wpebackend.tar.gz
-          tar xf wpebackend.tar.gz && cd WPEBackend-fdo-1.14.3
+          tar xf wpebackend.tar.gz && cd WPEBackend-fdo-*
 
           cmake -B _build -S . \
             -DCMAKE_SYSTEM_NAME=Linux \
