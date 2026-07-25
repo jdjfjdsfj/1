@@ -25,7 +25,8 @@ jobs:
           pacman -Syu --noconfirm
           pacman -S --noconfirm \
             base-devel git wget curl cmake meson ninja python3 python-pip \
-            pkgconf glib2 glib2-docs libxml2 sqlite3 libpsl
+            pkgconf glib2 glib2-docs libxml2 sqlite3 libpsl \
+            libxkbcommon libxkbcommon-x11 libxcb xcb-util-keysyms wayland-protocols
 
           # 安装 GCC 6.5.0 交叉工具链 (glibc 2.27)
           cd /tmp
