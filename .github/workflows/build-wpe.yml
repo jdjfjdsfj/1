@@ -212,14 +212,12 @@ jobs:
           wget -q https://github.com/Igalia/WPEBackend-fdo/archive/refs/tags/1.14.3.tar.gz -O wpebackend.tar.gz
           tar xf wpebackend.tar.gz && cd $(ls -d */ | head -1)
 
-          cmake -B _build -S . \
-            -DCMAKE_SYSTEM_NAME=Linux \
-            -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
-            -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
-            -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
-            -DCMAKE_FIND_ROOT_PATH=$INSTALL_PREFIX \
-            -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
-            -DCMAKE_BUILD_TYPE=Release
+          meson setup _build . \
+            --cross-file /tmp/cross-aarch64.txt \
+            --prefix=$INSTALL_PREFIX \
+            --buildtype=release
+          ninja -C _build -j$(nproc)
+          sudo ninja -C _build install
           cmake --build _build -j$(nproc)
           sudo cmake --install _build
 
