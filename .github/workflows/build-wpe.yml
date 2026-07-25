@@ -105,17 +105,31 @@ jobs:
           ninja -C _build -j$(nproc)
           ninja -C _build install
 
-      # ---------- wpebackend-fdo ----------
-      - name: 编译 wpebackend-fdo
+      # ---------- wpebackend-fdo (下载预编译 arm64 deb) ----------
+      - name: 下载 wpebackend-fdo
         run: |
+          mkdir -p $INSTALL_PREFIX/lib/pkgconfig $INSTALL_PREFIX/lib $INSTALL_PREFIX/include
           cd /tmp
-          wget -q https://github.com/Igalia/WPEBackend-fdo/archive/refs/tags/1.14.3.tar.gz -O wpebackend.tar.gz
-          tar xf wpebackend.tar.gz && cd $(ls -d */ | head -1)
-          meson setup _build . \
-            --cross-file /tmp/cross-aarch64.txt \
-            --prefix=$INSTALL_PREFIX --buildtype=release
-          ninja -C _build -j$(nproc)
-          ninja -C _build install
+
+          # wpebackend-fdo 可能在 Ubuntu universe 仓库
+          BASE="http://ports.ubuntu.com/pool/universe/w/wpebackend-fdo"
+          for ver in 1.14.0-1 1.14.3-1 1.12.0-1 1.10.0-1; do
+            wget -q "$BASE/libwpebackend-fdo-1.0-1_${ver}_arm64.deb" && break
+          done
+          for ver in 1.14.0-1 1.14.3-1 1.12.0-1 1.10.0-1; do
+            wget -q "$BASE/libwpebackend-fdo-1.0-dev_${ver}_arm64.deb" && break
+          done
+
+          mkdir -p /tmp/wpe-root
+          for deb in *.deb; do dpkg-deb -x "$deb" /tmp/wpe-root 2>/dev/null || true; done
+
+          cp /tmp/wpe-root/usr/lib/aarch64-linux-gnu/libWPEBackend-fdo-1.0.so* $INSTALL_PREFIX/lib/ 2>/dev/null || true
+          cp -r /tmp/wpe-root/usr/include/wpe-fdo-1.0 $INSTALL_PREFIX/include/ 2>/dev/null || true
+          cp /tmp/wpe-root/usr/lib/aarch64-linux-gnu/pkgconfig/wpebackend-fdo-1.0.pc $INSTALL_PREFIX/lib/pkgconfig/ 2>/dev/null || true
+          [ -f "$INSTALL_PREFIX/lib/pkgconfig/wpebackend-fdo-1.0.pc" ] && \
+            sed -i "s|prefix=/usr|prefix=$INSTALL_PREFIX|g" "$INSTALL_PREFIX/lib/pkgconfig/wpebackend-fdo-1.0.pc"
+
+          ls $INSTALL_PREFIX/lib/libWPEBackend* || echo "WARNING: wpebackend-fdo .so not found"
 
       - name: 上传依赖产物
         uses: actions/upload-artifact@v4
