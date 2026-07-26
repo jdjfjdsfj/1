@@ -258,33 +258,47 @@ jobs:
       - name: 交叉编译插件 .so
         run: |
           cd wpewebkit-browser-src
-
-          cat > /tmp/toolchain.cmake << 'EOF'
-          set(CMAKE_SYSTEM_NAME Linux)
-          set(CMAKE_SYSTEM_PROCESSOR aarch64)
-          set(CMAKE_C_COMPILER /usr/bin/aarch64-linux-gnu-gcc)
-          set(CMAKE_CXX_COMPILER /usr/bin/aarch64-linux-gnu-g++)
-          set(CMAKE_FIND_ROOT_PATH $ENV{INSTALL_PREFIX};$ENV{QT_DIR})
-          set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-          set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-          set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-          EOF
-
-          cmake -B _build -S . \
-            -DCMAKE_TOOLCHAIN_FILE=/tmp/toolchain.cmake \
-            -DCMAKE_PREFIX_PATH="$QT_DIR" \
-            -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
-            -DCMAKE_BUILD_TYPE=Release
-
-          cmake --build _build -j$(nproc)
-
-          # 构建 Qt fake qmake (供 MOC 使用)
-          g++ -o $QT_DIR/bin/qmake \
-            -DPREFIX=\"$QT_DIR\" \
-            $QT_DIR/bin/qmake.cpp || true
-
           mkdir -p /tmp/out
-          cp _build/libwpewebkit_browser.so /tmp/out/
+
+          # 直接在 CMakeLists.txt 中跳过 Qt5 find_package，改为手动编译
+          # 因为预编译 Qt tarball 不含 CMake 配置文件
+          cat > src/CMakeLists.tmp << 'CEOF'
+          cmake_minimum_required(VERSION 3.16)
+          project(wpewebkit_browser)
+          set(CMAKE_CXX_STANDARD 17)
+          add_library(wpewebkit_browser SHARED src/WebViewItem.cpp src/plugin.cpp)
+          target_include_directories(wpewebkit_browser PRIVATE
+            src
+            ${QT_INC}
+            ${WPE_INC}
+          )
+          target_link_libraries(wpewebkit_browser PRIVATE
+            Qt5Core Qt5Quick Qt5Gui Qt5Qml
+            wpe-1.0 WPEBackend-fdo-1.0 wpewebkit-2.0
+            EGL GLESv2 gobject-2.0 glib-2.0
+          )
+          set_target_properties(wpewebkit_browser PROPERTIES PREFIX "lib" SUFFIX ".so")
+          CEOF
+
+          # 直接用 g++ 编译（不用 CMake，因为 Qt5 tarball 无 FindQt5.cmake）
+          INC_QT="$QT_DIR/include"
+          INC_WPE="$INSTALL_PREFIX/include"
+          LIB_QT="$QT_DIR/lib"
+          LIB_WPE="$INSTALL_PREFIX/lib"
+
+          aarch64-linux-gnu-g++ -shared -o /tmp/out/libwpewebkit_browser.so \
+            -std=c++17 -fPIC -O2 \
+            -I src \
+            -I "$INC_QT" -I "$INC_QT/QtCore" -I "$INC_QT/QtGui" \
+            -I "$INC_QT/QtQuick" -I "$INC_QT/QtQml" \
+            -I "$INC_WPE" -I "$INC_WPE/wpe-1.0" -I "$INC_WPE/wpe-fdo-1.0" \
+            src/WebViewItem.cpp src/plugin.cpp \
+            -L "$LIB_QT" -L "$LIB_WPE" -L "/usr/aarch64-linux-gnu/lib" \
+            -lQt5Core -lQt5Quick -lQt5Gui -lQt5Qml \
+            -lwpe-1.0 -lWPEBackend-fdo-1.0 -lwpewebkit-2.0 \
+            -lEGL -lGLESv2 -lgobject-2.0 -lglib-2.0 \
+            -lpthread -ldl \
+            -Wl,--allow-shlib-undefined
 
       - name: 打包插件
         run: |
