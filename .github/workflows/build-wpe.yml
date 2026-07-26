@@ -263,9 +263,12 @@ jobs:
             -D"PREFIX=\"$QT_DIR\"" \
             "$QT_DIR/bin/qmake.cpp"
           $QT_DIR/bin/qmake
+          $QT_DIR/bin/moc --version
 
       - name: 交叉编译插件 .so
         run: |
+          xmake repo -u
+
           cd wpewebkit-browser-src
 
           # 设置 PKG_CONFIG_PATH 供 xmake 发现 WPE 依赖
@@ -280,7 +283,7 @@ jobs:
           xmake f \
             --qt="$QT_DIR" \
             --arch=arm64-v8a \
-            --toolchain=gcc \
+            --toolchain=zig \
             --cross=aarch64-linux-gnu.2.27 \
             -m release \
             -c \
