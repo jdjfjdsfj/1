@@ -44,13 +44,21 @@ jobs:
       - name: 创建 meson cross file
         run: |
           mkdir -p $INSTALL_PREFIX/lib/pkgconfig
+
+          # pkg-config 包装脚本：去掉 -L/usr/lib，替换为我们的 arm64 路径
+          cat > /tmp/pkg-config-wrap.sh <<SCRIPT
+          #!/bin/bash
+          exec /usr/bin/pkg-config "\$@" | sed 's| -L/usr/lib | -L$INSTALL_PREFIX/lib |g'
+          SCRIPT
+          chmod +x /tmp/pkg-config-wrap.sh
+
           cat > /tmp/cross-aarch64.txt <<EOF
           [binaries]
           c = '/usr/bin/aarch64-linux-gnu-gcc'
           cpp = '/usr/bin/aarch64-linux-gnu-g++'
           ar = '/usr/bin/aarch64-linux-gnu-ar'
           strip = '/usr/bin/aarch64-linux-gnu-strip'
-          pkgconfig = '/usr/bin/pkg-config'
+          pkgconfig = '/tmp/pkg-config-wrap.sh'
           glib_mkenums = '/usr/bin/glib-mkenums'
           glib_compile_resources = '/usr/bin/glib-compile-resources'
           gdbus_codegen = '/usr/bin/gdbus-codegen'
