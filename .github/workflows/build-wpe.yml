@@ -215,7 +215,7 @@ jobs:
           retention-days: 7
 
   # ==========================================================
-  # 交叉编译浏览器插件 .so
+  # 交叉编译浏览器插件 .so（遵循 build.yaml 的 xmake + zig 模式）
   # ==========================================================
   build-plugin:
     needs: build-deps
@@ -224,11 +224,11 @@ jobs:
     env:
       QT_DIR: /opt/qt-aarch64
     steps:
-      - name: 安装工具链
+      - name: 安装工具链 + xmake + zig
         run: |
           pacman -Syu --noconfirm
           pacman -S --noconfirm \
-            base-devel git wget cmake ninja
+            base-devel git wget xmake zig
 
           cd /tmp
           wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-binutils-2.30-1-x86_64.pkg.tar.zst"
@@ -255,50 +255,35 @@ jobs:
           mkdir -p $QT_DIR
           tar -xzf /tmp/qt.tar.gz -C $QT_DIR
 
+      - name: 构建 fake qmake
+        run: |
+          g++ -fmax-errors=1 \
+            -o "$QT_DIR/bin/qmake" \
+            -D"PREFIX=\"$QT_DIR\"" \
+            "$QT_DIR/bin/qmake.cpp"
+          $QT_DIR/bin/qmake
+
       - name: 交叉编译插件 .so
         run: |
           cd wpewebkit-browser-src
+
+          # 设置 WPE 库路径供 xmake 发现
+          export PKG_CONFIG_PATH="$INSTALL_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH"
+
+          xmake f \
+            --qt="$QT_DIR" \
+            --arch=arm64-v8a \
+            --toolchain=zig \
+            --cross=aarch64-linux-gnu.2.27 \
+            -m release \
+            -y
+
+          xmake build -j$(nproc)
+
           mkdir -p /tmp/out
-
-          # 直接在 CMakeLists.txt 中跳过 Qt5 find_package，改为手动编译
-          # 因为预编译 Qt tarball 不含 CMake 配置文件
-          cat > src/CMakeLists.tmp << 'CEOF'
-          cmake_minimum_required(VERSION 3.16)
-          project(wpewebkit_browser)
-          set(CMAKE_CXX_STANDARD 17)
-          add_library(wpewebkit_browser SHARED src/WebViewItem.cpp src/plugin.cpp)
-          target_include_directories(wpewebkit_browser PRIVATE
-            src
-            ${QT_INC}
-            ${WPE_INC}
-          )
-          target_link_libraries(wpewebkit_browser PRIVATE
-            Qt5Core Qt5Quick Qt5Gui Qt5Qml
-            wpe-1.0 WPEBackend-fdo-1.0 wpewebkit-2.0
-            EGL GLESv2 gobject-2.0 glib-2.0
-          )
-          set_target_properties(wpewebkit_browser PROPERTIES PREFIX "lib" SUFFIX ".so")
-          CEOF
-
-          # 直接用 g++ 编译（不用 CMake，因为 Qt5 tarball 无 FindQt5.cmake）
-          INC_QT="$QT_DIR/include"
-          INC_WPE="$INSTALL_PREFIX/include"
-          LIB_QT="$QT_DIR/lib"
-          LIB_WPE="$INSTALL_PREFIX/lib"
-
-          aarch64-linux-gnu-g++ -shared -o /tmp/out/libwpewebkit_browser.so \
-            -std=c++17 -fPIC -O2 \
-            -I src \
-            -I "$INC_QT" -I "$INC_QT/QtCore" -I "$INC_QT/QtGui" \
-            -I "$INC_QT/QtQuick" -I "$INC_QT/QtQml" \
-            -I "$INC_WPE" -I "$INC_WPE/wpe-1.0" -I "$INC_WPE/wpe-fdo-1.0" \
-            src/WebViewItem.cpp src/plugin.cpp \
-            -L "$LIB_QT" -L "$LIB_WPE" -L "/usr/aarch64-linux-gnu/lib" \
-            -lQt5Core -lQt5Quick -lQt5Gui -lQt5Qml \
-            -lwpe-1.0 -lWPEBackend-fdo-1.0 \
-            -lEGL -lGLESv2 -lgobject-2.0 -lglib-2.0 \
-            -lpthread -ldl \
-            -Wl,--allow-shlib-undefined
+          cp build/linux/arm64-v8a/release/libwpewebkit_browser.so /tmp/out/ 2>/dev/null || \
+            cp build/*/release/libwpewebkit_browser.so /tmp/out/ 2>/dev/null || \
+            echo "WARNING: .so not found, build may have failed"
 
       - name: 打包插件
         run: |
