@@ -225,11 +225,20 @@ jobs:
       QT_DIR: /opt/qt-aarch64
       XMAKE_ROOT: y
     steps:
-      - name: 安装工具链 + xmake + zig
+      - name: 安装工具链 + xmake
         run: |
           pacman -Syu --noconfirm
           pacman -S --noconfirm \
-            base-devel git wget xmake zig
+            base-devel git wget xmake
+
+          cd /tmp
+          wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-binutils-2.30-1-x86_64.pkg.tar.zst"
+          wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-glibc-2.27-1-any.pkg.tar.zst"
+          wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-gcc-6.5.0-1-x86_64.pkg.tar.zst"
+          pacman -U --noconfirm \
+            aarch64-linux-gnu-binutils-2.30-1-x86_64.pkg.tar.zst \
+            aarch64-linux-gnu-glibc-2.27-1-any.pkg.tar.zst \
+            aarch64-linux-gnu-gcc-6.5.0-1-x86_64.pkg.tar.zst
 
       - uses: actions/checkout@v4
 
@@ -265,7 +274,6 @@ jobs:
           xmake f \
             --qt="$QT_DIR" \
             --arch=arm64-v8a \
-            --toolchain=zig \
             --cross=aarch64-linux-gnu.2.27 \
             -m release \
             -y
