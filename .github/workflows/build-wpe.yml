@@ -265,7 +265,6 @@ jobs:
             "$QT_DIR/bin/qmake.cpp"
           $QT_DIR/bin/qmake || true
           ls "$QT_DIR/bin/" || true
-          find "$QT_DIR" -name "moc" -type f || true
 
           # 创建 WPE WebKit 头文件桩
           mkdir -p $INSTALL_PREFIX/include/wpe
@@ -347,11 +346,8 @@ jobs:
           $MOC src/WebViewItem.h -o src/moc_WebViewItem.cpp
           $MOC src/plugin.cpp -o src/plugin.moc 2>/dev/null || touch src/plugin.moc
 
-          # 找到所有 Qt 头文件子目录（不同编译可能结构不同）
-          QT_INCLUDES=$(find "$INC_QT" -name "QQuickItem" -type f 2>/dev/null | head -1 | xargs dirname)
-          echo "Found QQuickItem at: $QT_INCLUDES"
-          QT_INC_DIRS="$INC_QT"
-          for d in "$INC_QT"/*/; do [ -d "$d" ] && QT_INC_DIRS="$QT_INC_DIRS -I $d"; done
+          # Qt 头文件路径（标准 Qt5 安装结构）
+          QT_INC_DIRS="-I $INC_QT -I $INC_QT/QtCore -I $INC_QT/QtGui -I $INC_QT/QtQuick -I $INC_QT/QtQml -I $INC_QT/QtCore/5.15.2 -I $INC_QT/QtCore/5.15.2/QtCore"
 
           # 交叉编译
           aarch64-linux-gnu-g++ -shared -o /tmp/out/libwpewebkit_browser.so \
