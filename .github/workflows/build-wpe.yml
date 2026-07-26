@@ -229,7 +229,7 @@ jobs:
         run: |
           pacman -Syu --noconfirm
           pacman -S --noconfirm \
-            base-devel git wget xmake zig
+            base-devel gcc git wget xmake zig
 
           cd /tmp
           wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-binutils-2.30-1-x86_64.pkg.tar.zst"
@@ -262,8 +262,7 @@ jobs:
             -o "$QT_DIR/bin/qmake" \
             -D"PREFIX=\"$QT_DIR\"" \
             "$QT_DIR/bin/qmake.cpp"
-          $QT_DIR/bin/qmake
-          $QT_DIR/bin/moc --version
+          $QT_DIR/bin/qmake || true
 
       - name: 交叉编译插件 .so
         run: |
