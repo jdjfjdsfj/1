@@ -99,8 +99,9 @@ jobs:
           mkdir -p $INSTALL_PREFIX/lib/pkgconfig $INSTALL_PREFIX/lib $INSTALL_PREFIX/include
           cd /tmp
 
-          # 因为 GCC 6.5.0 交叉编译器使用 --sysroot=/usr/aarch64-linux-gnu
-          # 所有头文件必须在该路径下
+          # EGL/GLES/xkbcommon 头文件从 Archlinux 系统包获取
+          pacman -S --noconfirm libglvnd
+
           SYSROOT="/usr/aarch64-linux-gnu"
           sudo mkdir -p "$SYSROOT/include"
 
