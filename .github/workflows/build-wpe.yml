@@ -64,7 +64,7 @@ jobs:
           gdbus_codegen = '/usr/bin/gdbus-codegen'
 
           [properties]
-          pkg_config_libdir = '/usr/lib/pkgconfig:$INSTALL_PREFIX/lib/pkgconfig'
+          pkg_config_libdir = '$INSTALL_PREFIX/lib/pkgconfig:/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/lib/pkgconfig'
 
           [host_machine]
           system = 'linux'
@@ -73,7 +73,8 @@ jobs:
           endian = 'little'
 
           [built-in options]
-          c_link_args = ['-L$INSTALL_PREFIX/lib']
+          c_link_args = ['-L$INSTALL_PREFIX/lib', '-L/usr/aarch64-linux-gnu/lib']
+          cpp_link_args = ['-L$INSTALL_PREFIX/lib', '-L/usr/aarch64-linux-gnu/lib']
           EOF
 
       # ---------- libsoup2 (直接 wget 下载 arm64 deb，不依赖 apt-get) ----------
@@ -176,8 +177,14 @@ jobs:
             dpkg-deb -x "$deb" /tmp/extract 2>/dev/null || true
           done
 
-          # 拷贝 arm64 .so（wpebackend-fdo, libxkbcommon 等）
+          # 拷贝 arm64 .so（wpebackend-fdo, libxkbcommon 等所有 arm64 库）
           cp /tmp/extract/usr/lib/aarch64-linux-gnu/*.so* $INSTALL_PREFIX/lib/ 2>/dev/null || true
+          # 显式处理 libxkbcommon：如果 deb 里有，强制拷贝并修正 pkg-config
+          if [ -f "/tmp/extract/usr/lib/aarch64-linux-gnu/libxkbcommon.so" ]; then
+            cp /tmp/extract/usr/lib/aarch64-linux-gnu/libxkbcommon.so* $INSTALL_PREFIX/lib/
+            cp -r /tmp/extract/usr/include/xkbcommon $INSTALL_PREFIX/include/
+            cp /tmp/extract/usr/lib/aarch64-linux-gnu/pkgconfig/xkbcommon.pc $INSTALL_PREFIX/lib/pkgconfig/ 2>/dev/null || true
+          fi
           cp -r /tmp/extract/usr/include/wpe-fdo-1.0 $INSTALL_PREFIX/include/ 2>/dev/null || true
           cp /tmp/extract/usr/lib/aarch64-linux-gnu/pkgconfig/*.pc $INSTALL_PREFIX/lib/pkgconfig/ 2>/dev/null || true
 
