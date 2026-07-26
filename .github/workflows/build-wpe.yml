@@ -265,36 +265,32 @@ jobs:
           $QT_DIR/bin/qmake || true
           ls "$QT_DIR/bin/" || true
 
-      - name: 交叉编译插件 .so
+      - name: 交叉编译插件 .so（直接用 GCC 6.5.0）
         run: |
-          xmake repo -u
-
           cd wpewebkit-browser-src
-
-          # 设置 PKG_CONFIG_PATH 供 xmake 发现 WPE 依赖
-          export PKG_CONFIG_PATH="$INSTALL_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH"
-
-          # 显式指定 zig 使用的交叉编译器
-          export ZIG_CC=/usr/bin/aarch64-linux-gnu-gcc
-          export ZIG_CXX=/usr/bin/aarch64-linux-gnu-g++
-          export CC=/usr/bin/aarch64-linux-gnu-gcc
-          export CXX=/usr/bin/aarch64-linux-gnu-g++
-
-          xmake f \
-            --qt="$QT_DIR" \
-            --arch=arm64-v8a \
-            --toolchain=gcc \
-            --cross=aarch64-linux-gnu.2.27 \
-            -m release \
-            -c \
-            -y
-
-          xmake build -j$(nproc)
-
           mkdir -p /tmp/out
-          cp build/linux/arm64-v8a/release/libwpewebkit_browser.so /tmp/out/ 2>/dev/null || \
-            cp build/*/release/libwpewebkit_browser.so /tmp/out/ 2>/dev/null || \
-            echo "WARNING: .so not found, build may have failed"
+
+          INC_QT="$QT_DIR/include"
+          INC_WPE="$INSTALL_PREFIX/include"
+          LIB_QT="$QT_DIR/lib"
+          LIB_WPE="$INSTALL_PREFIX/lib"
+          SYSROOT="/usr/aarch64-linux-gnu/lib"
+
+          aarch64-linux-gnu-g++ -shared -o /tmp/out/libwpewebkit_browser.so \
+            -std=c++17 -fPIC -O2 \
+            -I src \
+            -I "$INC_QT" -I "$INC_QT/QtCore" -I "$INC_QT/QtGui" \
+            -I "$INC_QT/QtQuick" -I "$INC_QT/QtQml" \
+            -I "$INC_WPE" -I "$INC_WPE/wpe-1.0" -I "$INC_WPE/wpe-fdo-1.0" \
+            src/WebViewItem.cpp src/plugin.cpp \
+            -L "$LIB_QT" -L "$LIB_WPE" -L "$SYSROOT" \
+            -lQt5Core -lQt5Quick -lQt5Gui -lQt5Qml \
+            -lwpe-1.0 -lWPEBackend-fdo-1.0 \
+            -lEGL -lGLESv2 -lgobject-2.0 -lglib-2.0 \
+            -lpthread -ldl \
+            -Wl,--allow-shlib-undefined
+
+          ls -la /tmp/out/
 
       - name: 打包插件
         run: |
