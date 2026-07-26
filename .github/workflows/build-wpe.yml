@@ -263,6 +263,7 @@ jobs:
             -D"PREFIX=\"$QT_DIR\"" \
             "$QT_DIR/bin/qmake.cpp"
           $QT_DIR/bin/qmake || true
+          ls "$QT_DIR/bin/" || true
 
       - name: 交叉编译插件 .so
         run: |
@@ -282,7 +283,7 @@ jobs:
           xmake f \
             --qt="$QT_DIR" \
             --arch=arm64-v8a \
-            --toolchain=zig \
+            --toolchain=gcc \
             --cross=aarch64-linux-gnu.2.27 \
             -m release \
             -c \
