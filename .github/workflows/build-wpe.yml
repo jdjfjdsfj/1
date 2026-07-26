@@ -272,7 +272,7 @@ jobs:
 
           cmake -B _build -S . \
             -DCMAKE_TOOLCHAIN_FILE=/tmp/toolchain.cmake \
-            -DQt5_DIR=$QT_DIR/lib/cmake/Qt5 \
+            -DCMAKE_PREFIX_PATH="$QT_DIR" \
             -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
             -DCMAKE_BUILD_TYPE=Release
 
