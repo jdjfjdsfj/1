@@ -99,6 +99,8 @@ jobs:
           mkdir -p $INSTALL_PREFIX/lib/pkgconfig $INSTALL_PREFIX/lib $INSTALL_PREFIX/include
           cd /tmp
 
+          cp -r /usr/include/xkbcommon $INSTALL_PREFIX/include/
+
           # EGL/GLES 头文件：直接用 Archlinux 系统的（头文件是架构无关的）
           pacman -S --noconfirm mesa
           cp -r /usr/include/EGL $INSTALL_PREFIX/include/
