@@ -99,42 +99,48 @@ jobs:
           mkdir -p $INSTALL_PREFIX/lib/pkgconfig $INSTALL_PREFIX/lib $INSTALL_PREFIX/include
           cd /tmp
 
-          cp -r /usr/include/xkbcommon $INSTALL_PREFIX/include/
+          # 因为 GCC 6.5.0 交叉编译器使用 --sysroot=/usr/aarch64-linux-gnu
+          # 所有头文件必须在该路径下
+          SYSROOT="/usr/aarch64-linux-gnu"
+          sudo mkdir -p "$SYSROOT/include"
 
-          # EGL/GLES 头文件：直接用 Archlinux 系统的（头文件是架构无关的）
-          pacman -S --noconfirm mesa
-          cp -r /usr/include/EGL $INSTALL_PREFIX/include/
-          cp -r /usr/include/GLES2 $INSTALL_PREFIX/include/ 2>/dev/null || true
-          cp -r /usr/include/GLES3 $INSTALL_PREFIX/include/ 2>/dev/null || true
-          cp -r /usr/include/KHR $INSTALL_PREFIX/include/ 2>/dev/null || true
+          # 复制系统头文件到 sysroot
+          sudo cp -r /usr/include/xkbcommon "$SYSROOT/include/" 2>/dev/null || true
+          sudo cp -r /usr/include/EGL $SYSROOT/include/ 2>/dev/null || true
+          sudo cp -r /usr/include/GLES2 $SYSROOT/include/ 2>/dev/null || true
+          sudo cp -r /usr/include/GLES3 $SYSROOT/include/ 2>/dev/null || true
+          sudo cp -r /usr/include/KHR $SYSROOT/include/ 2>/dev/null || true
 
-          # 创建 egl.pc 和 glesv2.pc（从系统复制或手写）
-          if [ -f /usr/lib/pkgconfig/egl.pc ]; then
-            cp /usr/lib/pkgconfig/egl.pc $INSTALL_PREFIX/lib/pkgconfig/
-            sed -i "s|prefix=/usr|prefix=$INSTALL_PREFIX|g" $INSTALL_PREFIX/lib/pkgconfig/egl.pc
-          else
-            cat > $INSTALL_PREFIX/lib/pkgconfig/egl.pc <<PCEOF
-          prefix=$INSTALL_PREFIX
+          # 创建 sysroot 下的 pkg-config .pc 文件
+          sudo mkdir -p "$SYSROOT/lib/pkgconfig"
+          cat > /tmp/egl.pc <<PCEOF
+          prefix=/usr/aarch64-linux-gnu
           includedir=\${prefix}/include
           Name: egl
           Description: EGL
           Version: 1.5
           Cflags: -I\${includedir}
           PCEOF
-          fi
-          if [ -f /usr/lib/pkgconfig/glesv2.pc ]; then
-            cp /usr/lib/pkgconfig/glesv2.pc $INSTALL_PREFIX/lib/pkgconfig/
-            sed -i "s|prefix=/usr|prefix=$INSTALL_PREFIX|g" $INSTALL_PREFIX/lib/pkgconfig/glesv2.pc
-          else
-            cat > $INSTALL_PREFIX/lib/pkgconfig/glesv2.pc <<PCEOF
-          prefix=$INSTALL_PREFIX
+          sudo cp /tmp/egl.pc "$SYSROOT/lib/pkgconfig/egl.pc"
+          cat > /tmp/glesv2.pc <<PCEOF
+          prefix=/usr/aarch64-linux-gnu
           includedir=\${prefix}/include
           Name: glesv2
           Description: OpenGL ES 2.0
           Version: 2.0
           Cflags: -I\${includedir}
           PCEOF
-          fi
+          sudo cp /tmp/glesv2.pc "$SYSROOT/lib/pkgconfig/glesv2.pc"
+
+          # 同时创建 $INSTALL_PREFIX 下的头文件和 pkg-config
+          mkdir -p $INSTALL_PREFIX/include $INSTALL_PREFIX/lib/pkgconfig
+          cp -r /usr/include/EGL $INSTALL_PREFIX/include/ 2>/dev/null || true
+          cp -r /usr/include/GLES2 $INSTALL_PREFIX/include/ 2>/dev/null || true
+          cp -r /usr/include/GLES3 $INSTALL_PREFIX/include/ 2>/dev/null || true
+          cp -r /usr/include/KHR $INSTALL_PREFIX/include/ 2>/dev/null || true
+          cp -r /usr/include/xkbcommon $INSTALL_PREFIX/include/ 2>/dev/null || true
+          cp /tmp/egl.pc $INSTALL_PREFIX/lib/pkgconfig/ 2>/dev/null || true
+          cp /tmp/glesv2.pc $INSTALL_PREFIX/lib/pkgconfig/ 2>/dev/null || true
 
           # 下载 wpebackend-fdo arm64 deb
           WPEBE="http://ports.ubuntu.com/pool/universe/w/wpebackend-fdo"
