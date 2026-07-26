@@ -264,6 +264,8 @@ jobs:
             -D"PREFIX=\"$QT_DIR\"" \
             "$QT_DIR/bin/qmake.cpp"
           $QT_DIR/bin/qmake || true
+          ls "$QT_DIR/bin/" || true
+          find "$QT_DIR" -name "moc" -type f || true
 
           # 创建 WPE WebKit 头文件桩
           mkdir -p $INSTALL_PREFIX/include/wpe
