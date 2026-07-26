@@ -223,6 +223,7 @@ jobs:
     container: archlinux:latest
     env:
       QT_DIR: /opt/qt-aarch64
+      XMAKE_ROOT: y
     steps:
       - name: 安装工具链 + xmake + zig
         run: |
