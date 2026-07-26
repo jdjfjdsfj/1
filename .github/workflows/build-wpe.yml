@@ -267,7 +267,7 @@ jobs:
 
       - name: 获取 WPE WebKit 头文件 + 运行 MOC + 交叉编译
         run: |
-          cd wpewebkit-browser-src
+          cd $GITHUB_WORKSPACE/wpewebkit-browser-src
           mkdir -p /tmp/out
 
           # 创建 WPE WebKit API 桩头（内联声明，无需下载完整源码）
@@ -347,7 +347,7 @@ jobs:
           LIB_WPE="$INSTALL_PREFIX/lib"
           SYSROOT="/usr/aarch64-linux-gnu/lib"
 
-          cd wpewebkit-browser-src
+          cd $GITHUB_WORKSPACE/wpewebkit-browser-src
           $QT_DIR/bin/moc src/WebViewItem.h -o src/moc_WebViewItem.cpp
           $QT_DIR/bin/moc src/plugin.cpp -o src/plugin.moc 2>/dev/null || touch src/plugin.moc
 
