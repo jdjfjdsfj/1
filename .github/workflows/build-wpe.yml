@@ -229,7 +229,7 @@ jobs:
         run: |
           pacman -Syu --noconfirm
           pacman -S --noconfirm \
-            base-devel gcc git wget xmake zig
+            base-devel gcc git wget xmake zig qt5-tools
 
           cd /tmp
           wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-binutils-2.30-1-x86_64.pkg.tar.zst"
@@ -336,16 +336,16 @@ jobs:
           #endif
           WH
 
-          # 运行 MOC（Qt Meta Object Compiler）
-          INC_QT="$QT_DIR/include"
+          # 运行 MOC（用 x86_64 主机 moc，不能用 ARM64 版本的）
+          MOC=/usr/bin/moc
           INC_WPE="$INSTALL_PREFIX/include"
           LIB_QT="$QT_DIR/lib"
           LIB_WPE="$INSTALL_PREFIX/lib"
           SYSROOT="/usr/aarch64-linux-gnu/lib"
 
           cd $GITHUB_WORKSPACE/wpewebkit-browser-src
-          $QT_DIR/bin/moc src/WebViewItem.h -o src/moc_WebViewItem.cpp
-          $QT_DIR/bin/moc src/plugin.cpp -o src/plugin.moc 2>/dev/null || touch src/plugin.moc
+          $MOC src/WebViewItem.h -o src/moc_WebViewItem.cpp
+          $MOC src/plugin.cpp -o src/plugin.moc 2>/dev/null || touch src/plugin.moc
 
           # 交叉编译
           aarch64-linux-gnu-g++ -shared -o /tmp/out/libwpewebkit_browser.so \
