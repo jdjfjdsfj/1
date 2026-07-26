@@ -295,7 +295,7 @@ jobs:
             src/WebViewItem.cpp src/plugin.cpp \
             -L "$LIB_QT" -L "$LIB_WPE" -L "/usr/aarch64-linux-gnu/lib" \
             -lQt5Core -lQt5Quick -lQt5Gui -lQt5Qml \
-            -lwpe-1.0 -lWPEBackend-fdo-1.0 -lwpewebkit-2.0 \
+            -lwpe-1.0 -lWPEBackend-fdo-1.0 \
             -lEGL -lGLESv2 -lgobject-2.0 -lglib-2.0 \
             -lpthread -ldl \
             -Wl,--allow-shlib-undefined
