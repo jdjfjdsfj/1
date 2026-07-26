@@ -93,19 +93,7 @@ jobs:
 
           ls $INSTALL_PREFIX/lib/libsoup* || echo "WARNING: libsoup .so not found, but continuing"
 
-      # ---------- libwpe ----------
-      - name: 编译 libwpe
-        run: |
-          cd /tmp
-          wget -q https://github.com/WebPlatformForEmbedded/libwpe/archive/refs/tags/1.16.0.tar.gz -O libwpe.tar.gz
-          tar xf libwpe.tar.gz && cd libwpe-1.16.0
-          meson setup _build . \
-            --cross-file /tmp/cross-aarch64.txt \
-            --prefix=$INSTALL_PREFIX --buildtype=release
-          ninja -C _build -j$(nproc)
-          ninja -C _build install
-
-      # ---------- EGL/GLES 头文件 + wpebackend-fdo (预编译 arm64 deb) ----------
+      # ---------- EGL/GLES 头文件 + wpebackend-fdo (预编译 arm64 deb，必须在 libwpe 前) ----------
       - name: 下载 EGL/GLES 头文件 + wpebackend-fdo
         run: |
           mkdir -p $INSTALL_PREFIX/lib/pkgconfig $INSTALL_PREFIX/lib $INSTALL_PREFIX/include
@@ -140,7 +128,7 @@ jobs:
           cp -r /tmp/extract/usr/include/GLES3 $INSTALL_PREFIX/include/ 2>/dev/null || true
           cp -r /tmp/extract/usr/include/KHR $INSTALL_PREFIX/include/ 2>/dev/null || true
 
-          # 拷贝 pkg-config .pc 文件
+          # 拷贝 pkg-config .pc 文件（含 egl.pc, glesv2.pc）
           cp /tmp/extract/usr/lib/aarch64-linux-gnu/pkgconfig/*.pc $INSTALL_PREFIX/lib/pkgconfig/ 2>/dev/null || true
 
           # 拷贝 wpebackend-fdo .so 和头文件
@@ -154,6 +142,18 @@ jobs:
 
           echo "=== EGL headers ===" && ls $INSTALL_PREFIX/include/EGL/ 2>/dev/null || echo "MISSING"
           echo "=== WPEBackend ===" && ls $INSTALL_PREFIX/lib/libWPEBackend* 2>/dev/null || echo "MISSING"
+
+      # ---------- libwpe ----------
+      - name: 编译 libwpe
+        run: |
+          cd /tmp
+          wget -q https://github.com/WebPlatformForEmbedded/libwpe/archive/refs/tags/1.16.0.tar.gz -O libwpe.tar.gz
+          tar xf libwpe.tar.gz && cd libwpe-1.16.0
+          meson setup _build . \
+            --cross-file /tmp/cross-aarch64.txt \
+            --prefix=$INSTALL_PREFIX --buildtype=release
+          ninja -C _build -j$(nproc)
+          ninja -C _build install
 
       - name: 上传依赖产物
         uses: actions/upload-artifact@v4
