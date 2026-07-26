@@ -256,22 +256,16 @@ jobs:
           mkdir -p $QT_DIR
           tar -xzf /tmp/qt.tar.gz -C $QT_DIR
 
-      - name: 构建 fake qmake
+      - name: 构建 fake qmake + MOC + 交叉编译
         run: |
+          # 构建 fake qmake
           g++ -fmax-errors=1 \
             -o "$QT_DIR/bin/qmake" \
             -D"PREFIX=\"$QT_DIR\"" \
             "$QT_DIR/bin/qmake.cpp"
           $QT_DIR/bin/qmake || true
-          ls "$QT_DIR/bin/" || true
 
-      - name: 获取 WPE WebKit 头文件 + 运行 MOC + 交叉编译
-        run: |
-          cd $GITHUB_WORKSPACE/wpewebkit-browser-src
-          mkdir -p /tmp/out
-
-          # 创建 WPE WebKit API 桩头（内联声明，无需下载完整源码）
-          # 实际符号由设备上的 libwpewebkit.so 运行时解析
+          # 创建 WPE WebKit 头文件桩
           mkdir -p $INSTALL_PREFIX/include/wpe
           cat > $INSTALL_PREFIX/include/wpe/webkit.h << 'WH'
           #ifndef WPE_WEBKIT_H
