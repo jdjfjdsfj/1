@@ -265,7 +265,7 @@ jobs:
   # 交叉编译浏览器插件 .so（遵循 build.yaml 的 xmake + zig 模式）
   # ==========================================================
   build-plugin:
-    needs: build-deps download-webkit
+    needs: [build-deps, download-webkit]
     runs-on: ubuntu-latest
     container: archlinux:latest
     env:
