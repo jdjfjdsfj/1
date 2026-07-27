@@ -262,8 +262,8 @@ jobs:
       - name: 编译 WPE WebKit
         run: |
           cd /tmp
-          WEBKIT_VER=2.44.2
-          wget -q --timeout=300 --tries=3 "https://github.com/WebPlatformForEmbedded/WPEWebKit/archive/refs/tags/wpewebkit-${WEBKIT_VER}.tar.gz" -O wpewebkit.tar.gz
+          WEBKIT_VER=2.42.4
+          wget -q --timeout=600 --tries=3 "https://github.com/WebPlatformForEmbedded/WPEWebKit/archive/refs/tags/wpewebkit-${WEBKIT_VER}.tar.gz" -O wpewebkit.tar.gz
           tar xf wpewebkit.tar.gz
           cd WPEWebKit-wpewebkit-${WEBKIT_VER}
 
