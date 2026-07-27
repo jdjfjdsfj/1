@@ -96,7 +96,7 @@ static void onLoadChangedCB(WebKitWebView*, WebKitLoadEvent event, gpointer data
     }, Qt::QueuedConnection);
 }
 
-static void onNotifyTitleCB(GObject* obj, GParamSpec*, gpointer data)
+static void onNotifyTitleCB(GObject* obj, void*, void* data)
 {
     auto* self = static_cast<WebViewItem*>(data);
     const gchar* title = webkit_web_view_get_title(WEBKIT_WEB_VIEW(obj));
@@ -106,7 +106,7 @@ static void onNotifyTitleCB(GObject* obj, GParamSpec*, gpointer data)
     }, Qt::QueuedConnection);
 }
 
-static void onNotifyProgressCB(GObject* obj, GParamSpec*, gpointer data)
+static void onNotifyProgressCB(GObject* obj, void*, void* data)
 {
     auto* self = static_cast<WebViewItem*>(data);
     gdouble progress = webkit_web_view_get_estimated_load_progress(WEBKIT_WEB_VIEW(obj));
@@ -116,7 +116,7 @@ static void onNotifyProgressCB(GObject* obj, GParamSpec*, gpointer data)
     }, Qt::QueuedConnection);
 }
 
-static void onNotifyUriCB(GObject* obj, GParamSpec*, gpointer data)
+static void onNotifyUriCB(GObject* obj, void*, void* data)
 {
     auto* self = static_cast<WebViewItem*>(data);
     const gchar* uri = webkit_web_view_get_uri(WEBKIT_WEB_VIEW(obj));
