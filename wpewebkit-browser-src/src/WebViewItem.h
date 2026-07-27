@@ -7,6 +7,7 @@
 #include <QQuickWindow>
 
 struct wpe_view_backend;
+typedef struct _WebKitWebView WebKitWebView;
 
 class WebViewItem : public QQuickItem {
     Q_OBJECT
@@ -56,8 +57,12 @@ protected:
     void keyReleaseEvent(QKeyEvent* event) override;
 
 private:
+    void initWPE();
+    static void onLoadChanged(void*, int, void*);
+    static void onTitleChanged(void*, void*, void*);
+
     struct wpe_view_backend* m_wpeBackend = nullptr;
-    void* m_webView = nullptr;
+    WebKitWebView* m_webView = nullptr;
 
     QString m_title;
     QString m_url;
