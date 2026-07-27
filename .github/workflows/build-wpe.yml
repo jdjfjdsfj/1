@@ -240,15 +240,16 @@ jobs:
           pacman -Syu --noconfirm
           pacman -S --noconfirm \
             base-devel git wget cmake ninja python python-pip \
-            ruby bison flex gperf perl pkgconf glib2 clang
+            ruby bison flex gperf perl pkgconf glib2
 
-          # GCC 6.5.0 仅用于提供 glibc 2.27 sysroot（头文件 + 运行时库）
           cd /tmp
           wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-binutils-2.30-1-x86_64.pkg.tar.zst"
           wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-glibc-2.27-1-any.pkg.tar.zst"
+          wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-gcc-6.5.0-1-x86_64.pkg.tar.zst"
           pacman -U --noconfirm \
             aarch64-linux-gnu-binutils-2.30-1-x86_64.pkg.tar.zst \
-            aarch64-linux-gnu-glibc-2.27-1-any.pkg.tar.zst
+            aarch64-linux-gnu-glibc-2.27-1-any.pkg.tar.zst \
+            aarch64-linux-gnu-gcc-6.5.0-1-x86_64.pkg.tar.zst
 
       - uses: actions/checkout@v4
 
@@ -265,6 +266,9 @@ jobs:
           wget -q --timeout=600 --tries=3 "https://github.com/WebPlatformForEmbedded/WPEWebKit/archive/refs/tags/wpewebkit-${WEBKIT_VER}.tar.gz" -O wpewebkit.tar.gz
           tar xf wpewebkit.tar.gz
           cd WPEWebKit-wpewebkit-${WEBKIT_VER}
+
+          # 绕过 GCC 版本检查（GCC 6.5.0 满足 C++17 要求）
+          sed -i 's|10\.2 or newer|6.5 or newer|g' Source/cmake/WebKitCommon.cmake 2>/dev/null
 
           cmake -B _build -S . \
             -DCMAKE_SYSTEM_NAME=Linux \
