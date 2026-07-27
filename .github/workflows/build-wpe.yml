@@ -164,6 +164,12 @@ jobs:
             wget -q "$XKB/libxkbcommon-dev_${ver}_arm64.deb" && break || true
           done
 
+          # 下载 arm64 libepoxy（wpebackend-fdo 需要）
+          EPOXY="http://ports.ubuntu.com/pool/main/libe/libepoxy"
+          for ver in 1.5.10-1 1.5.10-0ubuntu1 1.5.8-1; do
+            wget -q "$EPOXY/libepoxy0_${ver}_arm64.deb" && break || true
+          done
+
           # 下载 wpebackend-fdo arm64 deb
           WPEBE="http://ports.ubuntu.com/pool/universe/w/wpebackend-fdo"
           for ver in 1.14.0-1 1.14.3-1 1.12.0-1 1.10.0-1; do
