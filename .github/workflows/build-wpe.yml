@@ -360,7 +360,6 @@ jobs:
             -L "$LIB_QT" -L "$LIB_WPE" -L "$SYSROOT" \
             -lQt5Core -lQt5Quick -lQt5Gui -lQt5Qml \
             -lwpe-1.0 -lWPEBackend-fdo-1.0 \
-            -lEGL -lGLESv2 -lgobject-2.0 -lglib-2.0 \
             -lpthread -ldl \
             -Wl,--allow-shlib-undefined
 
