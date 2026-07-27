@@ -7,6 +7,11 @@ on:
       - 'wpewebkit-browser/**'
       - '.github/workflows/build-wpe.yml'
   workflow_dispatch:
+    inputs:
+      build_webkit:
+        description: '编译 WPE WebKit 引擎（耗时 1-4 小时）'
+        type: boolean
+        default: false
 
 env:
   GCC_BASE_URL: https://github.com/Redbeanw44602/aarch64-linux-gnu-gcc-6.5.0/releases/download/6.5.0
@@ -217,6 +222,88 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wpe-deps-aarch64
+          path: ${{ env.INSTALL_PREFIX }}
+          retention-days: 7
+
+  # ==========================================================
+  # 编译 WPE WebKit 引擎（仅手动触发，耗时 1-4h）
+  # ==========================================================
+  build-webkit:
+    needs: build-deps
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.build_webkit == 'true'
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    timeout-minutes: 360
+    steps:
+      - name: 安装工具链和依赖
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm \
+            base-devel git wget cmake ninja python python-pip \
+            ruby bison flex gperf perl pkgconf glib2
+
+          cd /tmp
+          wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-binutils-2.30-1-x86_64.pkg.tar.zst"
+          wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-glibc-2.27-1-any.pkg.tar.zst"
+          wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-gcc-6.5.0-1-x86_64.pkg.tar.zst"
+          pacman -U --noconfirm \
+            aarch64-linux-gnu-binutils-2.30-1-x86_64.pkg.tar.zst \
+            aarch64-linux-gnu-glibc-2.27-1-any.pkg.tar.zst \
+            aarch64-linux-gnu-gcc-6.5.0-1-x86_64.pkg.tar.zst
+
+      - uses: actions/checkout@v4
+
+      - name: 下载 WPE 依赖产物
+        uses: actions/download-artifact@v4
+        with:
+          name: wpe-deps-aarch64
+          path: ${{ env.INSTALL_PREFIX }}
+
+      - name: 编译 WPE WebKit
+        run: |
+          cd /tmp
+          WEBKIT_VER=2.44.2
+          wget -q https://github.com/WebPlatformForEmbedded/WPEWebKit/archive/refs/tags/wpewebkit-${WEBKIT_VER}.tar.gz
+          tar xf wpewebkit-${WEBKIT_VER}.tar.gz
+          cd WPEWebKit-wpewebkit-${WEBKIT_VER}
+
+          cmake -B _build -S . \
+            -DCMAKE_SYSTEM_NAME=Linux \
+            -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+            -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
+            -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
+            -DCMAKE_FIND_ROOT_PATH=$INSTALL_PREFIX \
+            -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPORT=WPE \
+            -DENABLE_BUBBLEWRAP_SANDBOX=OFF \
+            -DENABLE_DOCUMENTATION=OFF \
+            -DENABLE_GAMEPAD=OFF \
+            -DENABLE_GEOLOCATION=OFF \
+            -DENABLE_GLES2=ON \
+            -DENABLE_GTKDOC=OFF \
+            -DENABLE_INTROSPECTION=OFF \
+            -DENABLE_JIT=OFF \
+            -DENABLE_MINIBROWSER=OFF \
+            -DENABLE_NOTIFICATIONS=OFF \
+            -DENABLE_SAMPLING_PROFILER=OFF \
+            -DENABLE_SPELLCHECK=OFF \
+            -DENABLE_WAYLAND_TARGET=ON \
+            -DENABLE_WEBDRIVER=OFF \
+            -DENABLE_WEB_AUDIO=OFF \
+            -DENABLE_WEB_CRYPTO=OFF \
+            -DUSE_EGL=ON \
+            -DUSE_LIBWPE=ON \
+            -DUSE_SOUP2=ON \
+            -DUSE_WPEBACKEND_FDO=ON \
+            -Wno-dev
+
+          cmake --build _build -j$(nproc) 2>&1 | tee build.log
+
+      - name: 上传 WPE WebKit
+        uses: actions/upload-artifact@v4
+        with:
+          name: wpewebkit-aarch64
           path: ${{ env.INSTALL_PREFIX }}
           retention-days: 7
 
