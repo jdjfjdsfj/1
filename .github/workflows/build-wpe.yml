@@ -351,6 +351,7 @@ jobs:
           QT_INC_DIRS="-I $INC_QT -I $INC_QT/QtCore -I $INC_QT/QtGui -I $INC_QT/QtQuick -I $INC_QT/QtQml -I $INC_QT/QtCore/5.15.2 -I $INC_QT/QtCore/5.15.2/QtCore"
 
           # 交叉编译
+          mkdir -p /tmp/out
           aarch64-linux-gnu-g++ -shared -o /tmp/out/libwpewebkit_browser.so \
             -std=c++17 -fPIC -O2 \
             -I src -I "$INC_WPE" -I "$INC_WPE/wpe-1.0" -I "$INC_WPE/wpe-fdo-1.0" \
