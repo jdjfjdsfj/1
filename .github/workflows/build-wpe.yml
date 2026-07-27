@@ -268,6 +268,7 @@ jobs:
           cd WPEWebKit-wpewebkit-${WEBKIT_VER}
 
           # 绕过 GCC 版本检查（GCC 6.5.0 满足 C++17 要求）
+          sed -i 's|VERSION_LESS 10\.[0-9]|VERSION_LESS 6.5|g' Source/cmake/WebKitCommon.cmake 2>/dev/null
           sed -i 's|10\.2 or newer|6.5 or newer|g' Source/cmake/WebKitCommon.cmake 2>/dev/null
 
           cmake -B _build -S . \
