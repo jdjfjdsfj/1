@@ -3,23 +3,10 @@
 
 #include <QQuickItem>
 #include <QSGSimpleTextureNode>
-#include <QSGTexture>
-#include <QQuickWindow>
 #include <QImage>
+#include <QQuickWindow>
 
-// 前向声明 WPE 结构体（避免需要所有头文件）
 struct wpe_view_backend;
-typedef struct _WebKitWebView WebKitWebView;
-typedef enum {
-    WEBKIT_LOAD_STARTED,
-    WEBKIT_LOAD_REDIRECTED,
-    WEBKIT_LOAD_COMMITTED,
-    WEBKIT_LOAD_FINISHED
-} WebKitLoadEvent;
-
-// WebKit URI request (前向声明)
-typedef struct _WebKitURIRequest WebKitURIRequest;
-typedef struct _WebKitNavigationAction WebKitNavigationAction;
 
 class WebViewItem : public QQuickItem {
     Q_OBJECT
@@ -70,28 +57,13 @@ protected:
 
 private:
     struct wpe_view_backend* m_wpeBackend = nullptr;
-    WebKitWebView* m_webView = nullptr;
+    void* m_webView = nullptr;
 
     QString m_title;
     QString m_url;
     bool m_loading = false;
     int m_loadProgress = 0;
     qreal m_zoomFactor = 1.0;
-
-    QSGTexture* m_texture = nullptr;
-    bool m_frameDirty = false;
-    int m_viewWidth = 320;
-    int m_viewHeight = 150;
-
-    void initWPE();
-    void cleanupWPE();
-    void resizeView();
-
-    // 通过 GLib 信号连接到 WebKit 的静态回调
-    static void onLoadChanged(WebKitWebView* view, int event, void* data);
-    static void onTitleChanged(void* obj, void* pspec, void* data);
-    static void onProgressChanged(void* obj, void* pspec, void* data);
-    static void onUriChanged(void* obj, void* pspec, void* data);
 };
 
-#endif // WEBVIEWITEM_H
+#endif
