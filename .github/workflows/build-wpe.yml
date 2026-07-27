@@ -273,11 +273,8 @@ jobs:
           cmake -B _build -S . \
             -DCMAKE_SYSTEM_NAME=Linux \
             -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
-            -DCMAKE_C_COMPILER=/usr/bin/clang \
-            -DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
-            -DCMAKE_C_COMPILER_TARGET=aarch64-linux-gnu \
-            -DCMAKE_CXX_COMPILER_TARGET=aarch64-linux-gnu \
-            -DCMAKE_SYSROOT=/usr/aarch64-linux-gnu \
+            -DCMAKE_C_COMPILER=/usr/bin/aarch64-linux-gnu-gcc \
+            -DCMAKE_CXX_COMPILER=/usr/bin/aarch64-linux-gnu-g++ \
             -DCMAKE_FIND_ROOT_PATH=$INSTALL_PREFIX \
             -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
             -DCMAKE_BUILD_TYPE=Release \
