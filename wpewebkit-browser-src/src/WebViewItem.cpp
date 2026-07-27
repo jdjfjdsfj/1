@@ -11,7 +11,8 @@
 // WPE / WebKit / EGL 头文件
 #include <wpe/wpe.h>
 #include <wpe/webkit.h>
-#include <WPEBackend-fdo-1.0.h>
+#include <wpe/fdo.h>
+#include <wpe/fdo-egl.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
