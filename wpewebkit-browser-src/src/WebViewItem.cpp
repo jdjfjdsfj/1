@@ -44,8 +44,20 @@ static PFN_g_object_unref             pfn_unref;
 static bool loadWebKit()
 {
     if (g_wpewebkit) return true;
-    g_wpewebkit = dlopen("libWPEWebKit-1.0.so.3", RTLD_LAZY);
-    if (!g_wpewebkit) { printf("[WPEBrowser] dlopen failed: %s\n", dlerror()); return false; }
+    // 尝试多个可能的路径
+    const char* paths[] = {
+        "libWPEWebKit-1.0.so.3",
+        "/usr/lib/libWPEWebKit-1.0.so.3",
+        "/userdisk/PenMods/wpe-libs/libWPEWebKit-1.0.so.3",
+        "/userdisk/PenMods/wpe-libs/libWPEWebKit-1.0.so",
+        nullptr
+    };
+    for (int i = 0; paths[i]; i++) {
+        g_wpewebkit = dlopen(paths[i], RTLD_LAZY);
+        if (g_wpewebkit) { printf("[WPEBrowser] loaded: %s\n", paths[i]); break; }
+        printf("[WPEBrowser] trying %s: %s\n", paths[i], dlerror());
+    }
+    if (!g_wpewebkit) { printf("[WPEBrowser] failed to load libWPEWebKit\n"); return false; }
 
     pfn_load_uri     = (PFN_webkit_web_view_load_uri)dlsym(g_wpewebkit, "webkit_web_view_load_uri");
     pfn_reload       = (PFN_webkit_web_view_reload)dlsym(g_wpewebkit, "webkit_web_view_reload");
