@@ -337,6 +337,7 @@ jobs:
 
           # 运行 MOC（用 x86_64 主机 moc，不能用 ARM64 版本的）
           MOC=/usr/bin/moc
+          INC_QT="$QT_DIR/include"
           INC_WPE="$INSTALL_PREFIX/include"
           LIB_QT="$QT_DIR/lib"
           LIB_WPE="$INSTALL_PREFIX/lib"
