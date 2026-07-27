@@ -267,8 +267,9 @@ jobs:
           tar xf wpewebkit.tar.gz
           cd WPEWebKit-wpewebkit-${WEBKIT_VER}
 
-          # 绕过 GCC 版本检查——直接删除检查代码块
-          sed -i '/GCC\|gcc.*or newer\|VERSION_LESS.*GCC\|CMAKE_CXX_COMPILER_VERSION.*10/d' Source/cmake/WebKitCommon.cmake 2>/dev/null
+          # 绕过 GCC 版本检查——将 FATAL_ERROR 改为 WARNING
+          sed -i 's|GCC .* or newer is required|(patched) ok|g' Source/cmake/WebKitCommon.cmake 2>/dev/null
+          sed -i 's|message(FATAL_ERROR.*GCC|message(WARNING "patched GCC check" #|g' Source/cmake/WebKitCommon.cmake 2>/dev/null
 
           cmake -B _build -S . \
             -DCMAKE_SYSTEM_NAME=Linux \
