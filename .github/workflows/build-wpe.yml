@@ -170,6 +170,15 @@ jobs:
             wget -q "$EPOXY/libepoxy0_${ver}_arm64.deb" && break || true
           done
 
+          # 下载 arm64 WPE WebKit（预编译 deb，无需 4h 编译）
+          WKWEB="http://ports.ubuntu.com/pool/universe/w/wpewebkit"
+          for ver in 2.36.0-2ubuntu3 2.28.1-1; do
+            wget -q "$WKWEB/libwpewebkit-1.0-3_${ver}_arm64.deb" && break || true
+          done
+          for ver in 2.36.0-2ubuntu3 2.28.1-1; do
+            wget -q "$WKWEB/libwpewebkit-1.0-dev_${ver}_arm64.deb" && break || true
+          done
+
           # 下载 wpebackend-fdo arm64 deb
           WPEBE="http://ports.ubuntu.com/pool/universe/w/wpebackend-fdo"
           for ver in 1.14.0-1 1.14.3-1 1.12.0-1 1.10.0-1; do
@@ -221,51 +230,10 @@ jobs:
           retention-days: 7
 
   # ==========================================================
-  # 下载 WPE WebKit arm64 预编译包（替代 1-4h 编译）
-  # ==========================================================
-  download-webkit:
-    needs: build-deps
-    runs-on: ubuntu-latest
-    container: archlinux:latest
-    steps:
-      - name: 安装工具
-        run: |
-          pacman -Syu --noconfirm
-          pacman -S --noconfirm wget dpkg
-
-      - name: 下载 WPE WebKit arm64 deb
-        run: |
-          mkdir -p /tmp/webkit-root $INSTALL_PREFIX/lib $INSTALL_PREFIX/include
-          cd /tmp
-          BASE="http://ports.ubuntu.com/pool/universe/w/wpewebkit"
-
-          # 尝试多个版本
-          for ver in 2.36.0-2ubuntu3 2.28.1-1; do
-            wget -q "$BASE/libwpewebkit-1.0-3_${ver}_arm64.deb" && break || true
-          done
-          for ver in 2.36.0-2ubuntu3 2.28.1-1; do
-            wget -q "$BASE/libwpewebkit-1.0-dev_${ver}_arm64.deb" && break || true
-          done
-
-          for deb in *.deb; do dpkg-deb -x "$deb" /tmp/webkit-root 2>/dev/null || true; done
-
-          # 拷贝 .so 和头文件
-          cp /tmp/webkit-root/usr/lib/aarch64-linux-gnu/libwpewebkit-*.so* $INSTALL_PREFIX/lib/ 2>/dev/null || true
-          cp /tmp/webkit-root/usr/lib/aarch64-linux-gnu/libWPE*so* $INSTALL_PREFIX/lib/ 2>/dev/null || true
-          cp -r /tmp/webkit-root/usr/include/wpe-* $INSTALL_PREFIX/include/ 2>/dev/null || true
-          cp /tmp/webkit-root/usr/lib/aarch64-linux-gnu/pkgconfig/*.pc $INSTALL_PREFIX/lib/pkgconfig/ 2>/dev/null || true
-
-          for pc in $INSTALL_PREFIX/lib/pkgconfig/*.pc; do
-            [ -f "$pc" ] && sed -i "s|prefix=/usr|prefix=$INSTALL_PREFIX|g" "$pc"
-          done
-
-          ls -la $INSTALL_PREFIX/lib/libwpewebkit* || echo "WARNING: WebKit .so not found"
-
-  # ==========================================================
   # 交叉编译浏览器插件 .so（遵循 build.yaml 的 xmake + zig 模式）
   # ==========================================================
   build-plugin:
-    needs: [build-deps, download-webkit]
+    needs: build-deps
     runs-on: ubuntu-latest
     container: archlinux:latest
     env:
