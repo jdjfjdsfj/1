@@ -64,6 +64,9 @@ private:
     struct wpe_view_backend* m_wpeBackend = nullptr;
     WebKitWebView* m_webView = nullptr;
 
+    int m_viewWidth = 320;
+    int m_viewHeight = 150;
+
     QString m_title;
     QString m_url;
     bool m_loading = false;

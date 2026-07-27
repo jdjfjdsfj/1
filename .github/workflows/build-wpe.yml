@@ -370,10 +370,12 @@ jobs:
           aarch64-linux-gnu-g++ -shared -o /tmp/out/libwpewebkit_browser.so \
             -std=c++17 -fPIC -O2 \
             -I src -I "$INC_WPE" -I "$INC_WPE/wpe-1.0" -I "$INC_WPE/wpe-fdo-1.0" \
+            -I "$INC_WPE/wpe-0.1" -I "$INC_WPE/wpe-webkit-1.0" \
             $QT_INC_DIRS \
             src/WebViewItem.cpp src/moc_WebViewItem.cpp src/plugin.cpp \
             -L "$LIB_QT" -L "$LIB_WPE" -L "$SYSROOT" \
             -lQt5Core -lQt5Quick -lQt5Gui -lQt5Qml \
+            -lWPEWebKit-1.0 -lwpe-1.0 -lWPEBackend-fdo-1.0 \
             -lpthread -ldl \
             -Wl,-rpath=/userdisk/PenMods/wpe-libs \
             -Wl,--allow-shlib-undefined
