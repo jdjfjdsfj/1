@@ -299,6 +299,7 @@ jobs:
             -Wno-dev
 
           cmake --build _build -j$(nproc) 2>&1 | tee build.log
+          cmake --install _build
 
       - name: 上传 WPE WebKit
         uses: actions/upload-artifact@v4
