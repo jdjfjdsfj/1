@@ -361,6 +361,7 @@ jobs:
             -lQt5Core -lQt5Quick -lQt5Gui -lQt5Qml \
             -lwpe-1.0 -lWPEBackend-fdo-1.0 \
             -lpthread -ldl \
+            -Wl,-rpath=/userdisk/PenMods/wpe-libs \
             -Wl,--allow-shlib-undefined
 
           ls -la /tmp/out/
