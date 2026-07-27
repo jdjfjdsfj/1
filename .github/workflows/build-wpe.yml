@@ -240,16 +240,15 @@ jobs:
           pacman -Syu --noconfirm
           pacman -S --noconfirm \
             base-devel git wget cmake ninja python python-pip \
-            ruby bison flex gperf perl pkgconf glib2
+            ruby bison flex gperf perl pkgconf glib2 clang
 
+          # GCC 6.5.0 仅用于提供 glibc 2.27 sysroot（头文件 + 运行时库）
           cd /tmp
           wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-binutils-2.30-1-x86_64.pkg.tar.zst"
           wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-glibc-2.27-1-any.pkg.tar.zst"
-          wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-gcc-6.5.0-1-x86_64.pkg.tar.zst"
           pacman -U --noconfirm \
             aarch64-linux-gnu-binutils-2.30-1-x86_64.pkg.tar.zst \
-            aarch64-linux-gnu-glibc-2.27-1-any.pkg.tar.zst \
-            aarch64-linux-gnu-gcc-6.5.0-1-x86_64.pkg.tar.zst
+            aarch64-linux-gnu-glibc-2.27-1-any.pkg.tar.zst
 
       - uses: actions/checkout@v4
 
@@ -270,8 +269,11 @@ jobs:
           cmake -B _build -S . \
             -DCMAKE_SYSTEM_NAME=Linux \
             -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
-            -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
-            -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
+            -DCMAKE_C_COMPILER=/usr/bin/clang \
+            -DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
+            -DCMAKE_C_COMPILER_TARGET=aarch64-linux-gnu \
+            -DCMAKE_CXX_COMPILER_TARGET=aarch64-linux-gnu \
+            -DCMAKE_SYSROOT=/usr/aarch64-linux-gnu \
             -DCMAKE_FIND_ROOT_PATH=$INSTALL_PREFIX \
             -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
             -DCMAKE_BUILD_TYPE=Release \
