@@ -365,7 +365,6 @@ jobs:
             src/WebViewItem.cpp src/moc_WebViewItem.cpp src/plugin.cpp \
             -L "$LIB_QT" -L "$LIB_WPE" -L "$SYSROOT" \
             -lQt5Core -lQt5Quick -lQt5Gui -lQt5Qml \
-            -lwpe-1.0 -lWPEBackend-fdo-1.0 \
             -lpthread -ldl \
             -Wl,-rpath=/userdisk/PenMods/wpe-libs \
             -Wl,--allow-shlib-undefined
