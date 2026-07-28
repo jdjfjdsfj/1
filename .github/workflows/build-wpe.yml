@@ -200,7 +200,7 @@ jobs:
             "http://ports.ubuntu.com/pool/main/c/cairo/libcairo2_1.16.0-5ubuntu1_arm64.deb"
             "http://ports.ubuntu.com/pool/main/i/icu/libicu70_70.1-2_arm64.deb"
             "http://ports.ubuntu.com/pool/main/w/woff2/libwoff1_1.0.2-1build4_arm64.deb"
-            "http://ports.ubuntu.com/pool/main/libx/libxslt/libxslt1.1_1.1.35-1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/libx/libxslt/libxslt1.1_1.1.34-4build2_arm64.deb"
             "http://ports.ubuntu.com/pool/main/g/gst-plugins-base1.0/libgstreamer-gl1.0-0_1.20.4-2ubuntu2_arm64.deb"
             "http://ports.ubuntu.com/pool/main/libj/libjpeg-turbo/libjpeg8_2.1.4-1ubuntu1_arm64.deb"
             "http://ports.ubuntu.com/pool/main/libp/libpng1.6/libpng16-16_1.6.38-2ubuntu1_arm64.deb"
@@ -214,7 +214,7 @@ jobs:
             "http://ports.ubuntu.com/pool/main/g/gstreamer1.0/libgstreamer1.0-0_1.20.3-0ubuntu1_arm64.deb"
             "http://ports.ubuntu.com/pool/main/gst-plugins-base1.0/libgstreamer-plugins-base1.0-0_1.20.4-2ubuntu2_arm64.deb"
             "http://ports.ubuntu.com/pool/main/s/sqlite3/libsqlite3-0_3.37.2-2ubuntu0.7_arm64.deb"
-            "http://ports.ubuntu.com/pool/main/libx/libxslt/libxslt1.1_1.1.35-1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/libx/libxslt/libxslt1.1_1.1.34-4build2_arm64.deb"
           )
           for url in "${DEPS[@]}"; do wget -q "$url" 2>/dev/null || true; done
 
