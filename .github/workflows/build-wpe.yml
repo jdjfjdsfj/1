@@ -174,7 +174,24 @@ jobs:
           # 下载 arm64 WPE WebKit（预编译 deb，无需 4h 编译）
           # WPE WebKit 完整依赖列表（从 Ubuntu 22.04 arm64 ports）
           DEPS=(
-            "http://ports.ubuntu.com/pool/main/a/atk1.0/libatk1.0-0_2.36.0-3build1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/g/glib2.0/libglib2.0-0_2.72.4-0ubuntu2.9_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/g/glib2.0/libgmodule-2.0-0_2.72.4-0ubuntu2.9_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/g/glib2.0/libgio-2.0-0_2.72.4-0ubuntu2.9_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/g/glib2.0/libgobject-2.0-0_2.72.4-0ubuntu2.9_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/z/zlib/zlib1g_1.2.11.dfsg-2ubuntu9.2_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/libx/libxml2/libxml2_2.9.13+dfsg-1ubuntu0.12_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/l/lcms2/liblcms2-2_2.12~rc1-2build1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/libg/libgcrypt20/libgcrypt20_1.10.2-1ubuntu1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/libt/libtasn1-6/libtasn1-6_4.18.0-5_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/s/systemd/libsystemd0_249.11-0ubuntu3_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/o/openjpeg2/libopenjp2-7_2.4.0-6_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/gst-plugins-base1.0/libgstapp-1.0-0_1.20.4-2ubuntu2_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/gst-plugins-base1.0/libgstaudio-1.0-0_1.20.4-2ubuntu2_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/gst-plugins-base1.0/libgsttag-1.0-0_1.20.4-2ubuntu2_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/gst-plugins-base1.0/libgstvideo-1.0-0_1.20.4-2ubuntu2_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/gst-plugins-base1.0/libgstpbutils-1.0-0_1.20.4-2ubuntu2_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/gst-plugins-base1.0/libgstfft-1.0-0_1.20.4-2ubuntu2_arm64.deb"
+            # 已有依赖
             "http://ports.ubuntu.com/pool/main/libs/libseccomp/libseccomp2_2.5.3-2ubuntu2_arm64.deb"
             "http://ports.ubuntu.com/pool/main/h/harfbuzz/libharfbuzz0b_2.7.4-1ubuntu3_arm64.deb"
             "http://ports.ubuntu.com/pool/main/h/harfbuzz/libharfbuzz-icu0_2.7.4-1ubuntu3_arm64.deb"
