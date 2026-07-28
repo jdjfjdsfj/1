@@ -204,17 +204,6 @@ jobs:
           for deb in *.deb; do dpkg-deb -x "$deb" /tmp/extract 2>/dev/null || true; done
           cp /tmp/extract/usr/lib/aarch64-linux-gnu/*.so* $INSTALL_PREFIX/lib/ 2>/dev/null || true
 
-          # 打印完整 NEEDED 列表，一次性看清缺什么
-          WEBKIT_SO=$(ls $INSTALL_PREFIX/lib/libWPEWebKit-*.so.* 2>/dev/null | head -1)
-          if [ -f "$WEBKIT_SO" ]; then
-            echo "=== FULL NEEDED deps ==="
-            aarch64-linux-gnu-objdump -p "$WEBKIT_SO" 2>/dev/null | grep NEEDED
-            echo "=== STILL MISSING ==="
-            aarch64-linux-gnu-objdump -p "$WEBKIT_SO" 2>/dev/null | grep NEEDED | awk '{print $2}' | while read f; do
-              ls $INSTALL_PREFIX/lib/$f >/dev/null 2>&1 || echo "MISSING: $f"
-            done
-          fi
-
           WKWEB="http://ports.ubuntu.com/pool/universe/w/wpewebkit"
           for ver in 2.36.0-2ubuntu3 2.28.1-1; do
             wget -q "$WKWEB/libwpewebkit-1.0-3_${ver}_arm64.deb" && break || true
@@ -255,6 +244,16 @@ jobs:
           done
 
           # 给所有预编译 .so 加上 RPATH（让它们能找到彼此的依赖）
+          # 先分析 libWPEWebKit 完整 NEEDED 列表
+          WEBKIT_SO=$(ls $INSTALL_PREFIX/lib/libWPEWebKit-*.so.* 2>/dev/null | head -1)
+          if [ -f "$WEBKIT_SO" ]; then
+            echo "=== FULL NEEDED deps ==="
+            aarch64-linux-gnu-objdump -p "$WEBKIT_SO" 2>/dev/null | grep NEEDED || echo "objdump not available"
+            echo "=== STILL MISSING ==="
+            aarch64-linux-gnu-objdump -p "$WEBKIT_SO" 2>/dev/null | grep NEEDED | awk '{print $2}' | while read f; do
+              ls $INSTALL_PREFIX/lib/$f >/dev/null 2>&1 || echo "  MISSING: $f"
+            done
+          fi
           for so in $INSTALL_PREFIX/lib/*.so*; do
             [ -f "$so" ] && patchelf --set-rpath '/userdisk/PenMods/wpe-libs:/usr/lib' "$so" 2>/dev/null || true
           done
