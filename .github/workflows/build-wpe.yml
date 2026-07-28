@@ -201,6 +201,9 @@ jobs:
             cp /tmp/extract/usr/lib/aarch64-linux-gnu/pkgconfig/xkbcommon.pc $INSTALL_PREFIX/lib/pkgconfig/ 2>/dev/null || true
           fi
           cp -r /tmp/extract/usr/include/wpe-fdo-1.0 $INSTALL_PREFIX/include/ 2>/dev/null || true
+          # 拷贝 WebKit 头文件
+          cp -r /tmp/extract/usr/include/wpe-1.0 $INSTALL_PREFIX/include/ 2>/dev/null || true
+          cp -r /tmp/extract/usr/include/wpe-0.1 $INSTALL_PREFIX/include/ 2>/dev/null || true
           cp /tmp/extract/usr/lib/aarch64-linux-gnu/pkgconfig/*.pc $INSTALL_PREFIX/lib/pkgconfig/ 2>/dev/null || true
 
           for pc in $INSTALL_PREFIX/lib/pkgconfig/*.pc; do
