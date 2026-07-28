@@ -1,9 +1,0 @@
-{
-    "id": "com.example.tts",
-    "name": "TTS Demo",
-    "version": "1.0.0",
-    "author": "Lyrecoul",
-    "description": "文字转语音 API 调用示例插件",
-    "icon": "qrc:/images/home/home-plugin.png",
-    "main_qml": "main.qml"
-}

@@ -1,9 +1,0 @@
-{
-    "id": "com.markdown.计算器",
-    "name": "计算器",
-    "version": "1.1.1",
-    "author": "kimi+deepseek",
-    "description": "计算器",
-    "icon": "file://userdisk/PenMods/plugins/calculator/icon.png",
-    "main_qml": "calculator.qml"
-}
