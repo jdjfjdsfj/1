@@ -26,7 +26,7 @@ jobs:
           pacman -S --noconfirm \
             base-devel git wget curl cmake meson ninja python3 python-pip \
             pkgconf glib2 glib2-docs libxml2 sqlite3 libpsl \
-            libxkbcommon libxkbcommon-x11 libxcb xcb-util-keysyms wayland-protocols
+            libxkbcommon libxkbcommon-x11 libxcb xcb-util-keysyms wayland-protocols patchelf
 
           # 安装 GCC 6.5.0 交叉工具链 (glibc 2.27)
           cd /tmp
@@ -227,6 +227,11 @@ jobs:
 
           for pc in $INSTALL_PREFIX/lib/pkgconfig/*.pc; do
             [ -f "$pc" ] && sed -i "s|prefix=/usr|prefix=$INSTALL_PREFIX|g" "$pc"
+          done
+
+          # 给所有预编译 .so 加上 RPATH（让它们能找到彼此的依赖）
+          for so in $INSTALL_PREFIX/lib/*.so*; do
+            [ -f "$so" ] && patchelf --set-rpath /userdisk/PenMods/wpe-libs "$so" 2>/dev/null || true
           done
 
           echo "=== EGL headers ===" && ls $INSTALL_PREFIX/include/EGL/ 2>/dev/null || echo "MISSING"
