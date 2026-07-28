@@ -28,7 +28,7 @@ jobs:
             pkgconf glib2 glib2-docs libxml2 sqlite3 libpsl \
             libxkbcommon libxkbcommon-x11 libxcb xcb-util-keysyms wayland-protocols patchelf
 
-          # 安装 GCC 6.5.0 交叉工具链 (glibc 2.27)
+          # 安装 GCC 6.5.0 交叉工具�?(glibc 2.27)
           cd /tmp
           wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-binutils-2.30-1-x86_64.pkg.tar.zst"
           wget -q "${{ env.GCC_BASE_URL }}/aarch64-linux-gnu-glibc-2.27-1-any.pkg.tar.zst"
@@ -45,7 +45,7 @@ jobs:
         run: |
           mkdir -p $INSTALL_PREFIX/lib/pkgconfig
 
-          # pkg-config 包装脚本：去掉 -L/usr/lib，替换为我们的 arm64 路径
+          # pkg-config 包装脚本：去�?-L/usr/lib，替换为我们�?arm64 路径
           cat > /tmp/pkg-config-wrap.sh <<SCRIPT
           #!/bin/bash
           exec /usr/bin/pkg-config "\$@" | sed 's| -L/usr/lib | -L$INSTALL_PREFIX/lib |g'
@@ -105,13 +105,13 @@ jobs:
 
           ls $INSTALL_PREFIX/lib/libsoup* || echo "WARNING: libsoup .so not found, but continuing"
 
-      # ---------- EGL/GLES 头文件 + wpebackend-fdo (预编译 arm64 deb，必须在 libwpe 前) ----------
-      - name: 下载 EGL/GLES 头文件 + wpebackend-fdo
+      # ---------- EGL/GLES 头文�?+ wpebackend-fdo (预编�?arm64 deb，必须在 libwpe �? ----------
+      - name: 下载 EGL/GLES 头文�?+ wpebackend-fdo
         run: |
           mkdir -p $INSTALL_PREFIX/lib/pkgconfig $INSTALL_PREFIX/lib $INSTALL_PREFIX/include
           cd /tmp
 
-          # EGL/GLES/xkbcommon 头文件从 Archlinux 系统包获取
+          # EGL/GLES/xkbcommon 头文件从 Archlinux 系统包获�?
           pacman -S --noconfirm libglvnd
 
           SYSROOT="/usr/aarch64-linux-gnu"
@@ -170,10 +170,11 @@ jobs:
             wget -q "$EPOXY/libepoxy0_${ver}_arm64.deb" && break || true
           done
 
-          # 下载 arm64 WPE WebKit（预编译 deb，无需 4h 编译）
-          # 下载 arm64 WPE WebKit（预编译 deb，无需 4h 编译）
-          # WPE WebKit 完整依赖列表（从 Ubuntu 22.04 arm64 ports）
+          # 下载 arm64 WPE WebKit（预编译 deb，无需 4h 编译�?
+          # 下载 arm64 WPE WebKit（预编译 deb，无需 4h 编译�?
+          # WPE WebKit 完整依赖列表（从 Ubuntu 22.04 arm64 ports�?
           DEPS=(
+            ""
             "http://ports.ubuntu.com/pool/main/g/glib2.0/libglib2.0-0_2.72.4-0ubuntu2.9_arm64.deb"
             "http://ports.ubuntu.com/pool/main/g/glib2.0/libgmodule-2.0-0_2.72.4-0ubuntu2.9_arm64.deb"
             "http://ports.ubuntu.com/pool/main/g/glib2.0/libgio-2.0-0_2.72.4-0ubuntu2.9_arm64.deb"
@@ -256,16 +257,16 @@ jobs:
             dpkg-deb -x "$deb" /tmp/extract 2>/dev/null || true
           done
 
-          # 拷贝 arm64 .so（wpebackend-fdo, libxkbcommon 等所有 arm64 库）
+          # 拷贝 arm64 .so（wpebackend-fdo, libxkbcommon 等所�?arm64 库）
           cp /tmp/extract/usr/lib/aarch64-linux-gnu/*.so* $INSTALL_PREFIX/lib/ 2>/dev/null || true
-          # 显式处理 libxkbcommon：如果 deb 里有，强制拷贝并修正 pkg-config
+          # 显式处理 libxkbcommon：如�?deb 里有，强制拷贝并修正 pkg-config
           if [ -f "/tmp/extract/usr/lib/aarch64-linux-gnu/libxkbcommon.so" ]; then
             cp /tmp/extract/usr/lib/aarch64-linux-gnu/libxkbcommon.so* $INSTALL_PREFIX/lib/
             cp -r /tmp/extract/usr/include/xkbcommon $INSTALL_PREFIX/include/
             cp /tmp/extract/usr/lib/aarch64-linux-gnu/pkgconfig/xkbcommon.pc $INSTALL_PREFIX/lib/pkgconfig/ 2>/dev/null || true
           fi
           cp -r /tmp/extract/usr/include/wpe-fdo-1.0 $INSTALL_PREFIX/include/ 2>/dev/null || true
-          # 拷贝 WebKit 头文件
+          # 拷贝 WebKit 头文�?
           cp -r /tmp/extract/usr/include/wpe-1.0 $INSTALL_PREFIX/include/ 2>/dev/null || true
           cp -r /tmp/extract/usr/include/wpe-0.1 $INSTALL_PREFIX/include/ 2>/dev/null || true
           cp /tmp/extract/usr/lib/aarch64-linux-gnu/pkgconfig/*.pc $INSTALL_PREFIX/lib/pkgconfig/ 2>/dev/null || true
@@ -274,8 +275,8 @@ jobs:
             [ -f "$pc" ] && sed -i "s|prefix=/usr|prefix=$INSTALL_PREFIX|g" "$pc"
           done
 
-          # 给所有预编译 .so 加上 RPATH（让它们能找到彼此的依赖）
-          # 先分析 libWPEWebKit 完整 NEEDED 列表
+          # 给所有预编译 .so 加上 RPATH（让它们能找到彼此的依赖�?
+          # 先分�?libWPEWebKit 完整 NEEDED 列表
           WEBKIT_SO=$(ls $INSTALL_PREFIX/lib/libWPEWebKit-*.so.* 2>/dev/null | head -1)
           if [ -f "$WEBKIT_SO" ]; then
             echo "=== FULL NEEDED deps ==="
@@ -312,7 +313,7 @@ jobs:
           retention-days: 7
 
   # ==========================================================
-  # 交叉编译浏览器插件 .so（遵循 build.yaml 的 xmake + zig 模式）
+  # 交叉编译浏览器插�?.so（遵�?build.yaml �?xmake + zig 模式�?
   # ==========================================================
   build-plugin:
     needs: build-deps
@@ -322,7 +323,7 @@ jobs:
       QT_DIR: /opt/qt-aarch64
       XMAKE_ROOT: y
     steps:
-      - name: 安装工具链 + xmake + zig
+      - name: 安装工具�?+ xmake + zig
         run: |
           pacman -Syu --noconfirm
           pacman -S --noconfirm \
@@ -345,7 +346,7 @@ jobs:
           name: wpe-deps-aarch64
           path: ${{ env.INSTALL_PREFIX }}
 
-      - name: 下载预编译 ARM64 Qt 5.15.2
+      - name: 下载预编�?ARM64 Qt 5.15.2
         run: |
           wget -q \
             https://github.com/Redbeanw44602/aarch64-linux-qt-5.15.2/releases/latest/download/aarch64-linux-qt-5.15.2.tar.gz \
@@ -375,7 +376,7 @@ jobs:
           $MOC src/WebViewItem.h -o src/moc_WebViewItem.cpp
           $MOC src/plugin.cpp -o src/plugin.moc 2>/dev/null || touch src/plugin.moc
 
-          # Qt 头文件路径（标准 Qt5 安装结构）
+          # Qt 头文件路径（标准 Qt5 安装结构�?
           QT_INC_DIRS="-I $INC_QT -I $INC_QT/QtCore -I $INC_QT/QtGui -I $INC_QT/QtQuick -I $INC_QT/QtQml -I $INC_QT/QtCore/5.15.2 -I $INC_QT/QtCore/5.15.2/QtCore"
 
           # 交叉编译
@@ -402,7 +403,7 @@ jobs:
           cp /tmp/out/libwpewebkit_browser.so /tmp/release/wpewebkit-browser/
           cp $INSTALL_PREFIX/lib/*.so* /tmp/release/wpe-libs/ 2>/dev/null || true
 
-      - name: 上传最终产物
+      - name: 上传最终产�?
         uses: actions/upload-artifact@v4
         with:
           name: wpewebkit-browser-release
@@ -415,3 +416,4 @@ jobs:
           name: libwpewebkit_browser.so
           path: /tmp/out/
           retention-days: 30
+
