@@ -177,6 +177,7 @@ jobs:
             "http://ports.ubuntu.com/pool/main/a/atk1.0/libatk1.0-0_2.36.0-3build1_arm64.deb"
             "http://ports.ubuntu.com/pool/main/libs/libseccomp/libseccomp2_2.5.3-2ubuntu2_arm64.deb"
             "http://ports.ubuntu.com/pool/main/h/harfbuzz/libharfbuzz0b_2.7.4-1ubuntu3_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/h/harfbuzz/libharfbuzz-icu0_2.7.4-1ubuntu3_arm64.deb"
             "http://ports.ubuntu.com/pool/main/f/freetype/libfreetype6_2.11.1+dfsg-1ubuntu0.2_arm64.deb"
             "http://ports.ubuntu.com/pool/main/f/fontconfig/libfontconfig1_2.13.1-4.4ubuntu1_arm64.deb"
             "http://ports.ubuntu.com/pool/main/c/cairo/libcairo2_1.16.0-5ubuntu1_arm64.deb"
