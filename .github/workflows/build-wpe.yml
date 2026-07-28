@@ -171,6 +171,13 @@ jobs:
           done
 
           # 下载 arm64 WPE WebKit（预编译 deb，无需 4h 编译）
+          # 下载 arm64 WPE WebKit（预编译 deb，无需 4h 编译）
+          # 先下载 WebKit 的传递依赖
+          ATK="http://ports.ubuntu.com/pool/main/a/atk1.0"
+          for ver in 2.36.0-3 2.36.0-2; do
+            wget -q "$ATK/libatk-1.0-0_${ver}_arm64.deb" && break || true
+          done
+
           WKWEB="http://ports.ubuntu.com/pool/universe/w/wpewebkit"
           for ver in 2.36.0-2ubuntu3 2.28.1-1; do
             wget -q "$WKWEB/libwpewebkit-1.0-3_${ver}_arm64.deb" && break || true
