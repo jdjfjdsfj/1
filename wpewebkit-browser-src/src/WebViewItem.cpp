@@ -83,8 +83,8 @@ void WebViewItem::setZoomFactor(qreal factor)
     emit zoomFactorChanged();
 }
 
-bool WebViewItem::canGoBack() const    { return m_webView && webkit_web_view_can_go_back(m_webView); }
-bool WebViewItem::canGoForward() const { return m_webView && webkit_web_view_can_go_forward(m_webView); }
+bool WebViewItem::canGoBack()    { return m_webView && webkit_web_view_can_go_back(m_webView); }
+bool WebViewItem::canGoForward() { return m_webView && webkit_web_view_can_go_forward(m_webView); }
 
 QSGNode* WebViewItem::updatePaintNode(QSGNode* old, UpdatePaintNodeData*)
 {

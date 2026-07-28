@@ -1,0 +1,25 @@
+add_rules('mode.release', 'mode.debug', 'mode.releasedbg')
+
+set_languages('cxx17', 'c11')
+set_warnings('all')
+set_exceptions('cxx')
+
+if is_mode('releasedbg') then
+    set_symbols('debug')
+    set_optimize('fast')
+end
+
+target('shell_plugin')
+    set_kind('shared')
+    add_rules('qt.shared')
+
+    add_files('src/*.cpp')
+    add_files('src/*.h')
+
+    add_frameworks(
+        'QtCore',
+        'QtQuick',
+        'QtQml',
+        'QtGui'
+    )
+    add_syslinks('dl')

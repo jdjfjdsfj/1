@@ -32,6 +32,8 @@ public:
     Q_INVOKABLE void goForward();
     Q_INVOKABLE void reload();
     Q_INVOKABLE void stop();
+    Q_INVOKABLE bool canGoBack();
+    Q_INVOKABLE bool canGoForward();
 
 signals:
     void titleChanged();

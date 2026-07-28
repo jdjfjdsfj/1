@@ -1,0 +1,10 @@
+{
+  "id": "shell_plugin",
+  "name": "Shell",
+  "version": "1.0.0",
+  "author": "OpenAI",
+  "description": "Shell 终端插件",
+  "icon": "qrc:/images/home/home-plugin.png",
+  "main_qml": "qml/main.qml",
+  "main_so": "libshell_plugin.so"
+}

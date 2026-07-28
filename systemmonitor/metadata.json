@@ -1,0 +1,10 @@
+{
+    "id": "com.system.monitor",
+    "name": "系统监测",
+    "version": "1.0.0",
+    "author": "deepseek",
+    "description": "系统信息监测：CPU/内存/磁盘/eMMC寿命/电池健康",
+    "icon": "qrc:/images/home/home-plugin.png",
+    "main_qml": "main.qml",
+    "main_so": "libshell_plugin.so"
+}

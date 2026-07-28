@@ -1,0 +1,10 @@
+{
+    "id": "com.example.clock",
+    "name": "数字时钟",
+    "version": "1.1.0",
+    "author": "OpenAI",
+    "description": "一个简单的桌面数字时钟插件",
+    "icon": "qrc:/images/home/home-plugin.png",
+    "main_qml": "main.qml",
+    "main_so": "libclock_plugin.so"
+}

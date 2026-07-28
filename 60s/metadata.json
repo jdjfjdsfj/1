@@ -1,0 +1,9 @@
+{
+    "id": "com.markdown.60s",
+    "name": "60s",
+    "version": "1.1.0",
+    "author": "Bsgm & OpenAI+Kimi",
+    "description": "一系列高质量、开源、可靠、全球CDN加速的开放API集合。",
+    "icon": "file:/userdisk/PenMods/plugins/60s/icon.png",
+    "main_qml": "main.qml"
+}

@@ -1,0 +1,9 @@
+{
+    "id": "com.game.dinorun",
+    "name": "小恐龙快跑",
+    "version": "1.1.1",
+    "author": "deepseek",
+    "description": "Google Chrome 经典小恐龙跑酷游戏，点击屏幕跳跃，躲避仙人掌障碍物",
+    "icon": "qrc:/images/home/home-plugin.png",
+    "main_qml": "main.qml"
+}
