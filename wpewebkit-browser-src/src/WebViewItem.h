@@ -6,7 +6,6 @@
 #include <QImage>
 #include <QQuickWindow>
 
-struct wpe_view_backend;
 typedef struct _WebKitWebView WebKitWebView;
 
 class WebViewItem : public QQuickItem {
@@ -16,8 +15,6 @@ class WebViewItem : public QQuickItem {
     Q_PROPERTY(bool loading READ isLoading NOTIFY loadingChanged)
     Q_PROPERTY(int loadProgress READ loadProgress NOTIFY loadProgressChanged)
     Q_PROPERTY(qreal zoomFactor READ zoomFactor WRITE setZoomFactor NOTIFY zoomFactorChanged)
-    Q_PROPERTY(bool canGoBack READ canGoBack NOTIFY navigationChanged)
-    Q_PROPERTY(bool canGoForward READ canGoForward NOTIFY navigationChanged)
 
 public:
     explicit WebViewItem(QQuickItem* parent = nullptr);
@@ -29,8 +26,6 @@ public:
     int loadProgress() const { return m_loadProgress; }
     qreal zoomFactor() const { return m_zoomFactor; }
     void setZoomFactor(qreal factor);
-    bool canGoBack() const;
-    bool canGoForward() const;
 
     Q_INVOKABLE void loadUrl(const QString& u);
     Q_INVOKABLE void goBack();
@@ -44,31 +39,23 @@ signals:
     void loadingChanged();
     void loadProgressChanged();
     void zoomFactorChanged();
-    void navigationChanged();
 
 protected:
     QSGNode* updatePaintNode(QSGNode* old, UpdatePaintNodeData*) override;
-    void geometryChanged(const QRectF& newGeom, const QRectF& oldGeom) override;
-    void mousePressEvent(QMouseEvent* event) override;
-    void mouseReleaseEvent(QMouseEvent* event) override;
-    void mouseMoveEvent(QMouseEvent* event) override;
-    void wheelEvent(QWheelEvent* event) override;
-    void keyPressEvent(QKeyEvent* event) override;
-    void keyReleaseEvent(QKeyEvent* event) override;
+    void geometryChanged(const QRectF&, const QRectF&) override;
+    void mousePressEvent(QMouseEvent*) override;
+    void mouseReleaseEvent(QMouseEvent*) override;
+    void mouseMoveEvent(QMouseEvent*) override;
+    void wheelEvent(QWheelEvent*) override;
+    void keyPressEvent(QKeyEvent*) override;
+    void keyReleaseEvent(QKeyEvent*) override;
 
 private:
     void initWPE();
-    static void onLoadChanged(void*, int, void*);
-    static void onTitleChanged(void*, void*, void*);
 
-    struct wpe_view_backend* m_wpeBackend = nullptr;
     WebKitWebView* m_webView = nullptr;
-
-    int m_viewWidth = 320;
-    int m_viewHeight = 150;
-
-    QString m_title;
-    QString m_url;
+    int m_viewWidth = 320, m_viewHeight = 150;
+    QString m_title, m_url;
     bool m_loading = false;
     int m_loadProgress = 0;
     qreal m_zoomFactor = 1.0;
