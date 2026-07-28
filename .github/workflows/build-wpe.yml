@@ -205,7 +205,7 @@ jobs:
             "http://ports.ubuntu.com/pool/main/libw/libwebp/libwebp7_1.2.2-2_arm64.deb"
             "http://ports.ubuntu.com/pool/main/libw/libwebp/libwebpdemux2_1.2.2-2_arm64.deb"
             "http://ports.ubuntu.com/pool/main/libt/libtasn1-6/libtasn1-6_4.18.0-4build1_arm64.deb"
-            "http://ports.ubuntu.com/pool/main/gst-plugins-base1.0/libgstgl-1.0-0_1.20.3-0ubuntu1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/g/gst-plugins-base1.0/libgstreamer-gl1.0-0_1.20.1-1_arm64.deb"
             "http://ports.ubuntu.com/pool/main/l/lcms2/liblcms2-2_2.12~rc1-2build2_arm64.deb"
             "http://ports.ubuntu.com/pool/main/libg/libgcrypt20/libgcrypt20_1.9.4-3ubuntu3_arm64.deb"
             "http://ports.ubuntu.com/pool/main/g/gst-plugins-base1.0/libgstreamer-gl1.0-0_1.20.4-2ubuntu2_arm64.deb"
@@ -226,7 +226,7 @@ jobs:
             "http://ports.ubuntu.com/pool/main/libw/libwebp/libwebp7_1.2.2-2_arm64.deb"
             "http://ports.ubuntu.com/pool/main/libw/libwebp/libwebpdemux2_1.2.2-2_arm64.deb"
             "http://ports.ubuntu.com/pool/main/libt/libtasn1-6/libtasn1-6_4.18.0-4build1_arm64.deb"
-            "http://ports.ubuntu.com/pool/main/gst-plugins-base1.0/libgstgl-1.0-0_1.20.3-0ubuntu1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/g/gst-plugins-base1.0/libgstreamer-gl1.0-0_1.20.1-1_arm64.deb"
             "http://ports.ubuntu.com/pool/main/l/lcms2/liblcms2-2_2.12~rc1-2build2_arm64.deb"
             "http://ports.ubuntu.com/pool/main/libg/libgcrypt20/libgcrypt20_1.9.4-3ubuntu3_arm64.deb"
           )
