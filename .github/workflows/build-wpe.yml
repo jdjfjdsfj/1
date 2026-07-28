@@ -172,23 +172,31 @@ jobs:
 
           # 下载 arm64 WPE WebKit（预编译 deb，无需 4h 编译）
           # 下载 arm64 WPE WebKit（预编译 deb，无需 4h 编译）
-          # 先下载 WebKit 的传递依赖（批量下载常见依赖）
-          for dep in \
-            "http://ports.ubuntu.com/pool/main/a/atk1.0/libatk1.0-0_2.36.0-3build1_arm64.deb" \
-            "http://ports.ubuntu.com/pool/main/libs/libseccomp/libseccomp2_2.5.3-2ubuntu2_arm64.deb" \
-            "http://ports.ubuntu.com/pool/main/s/systemd/libsystemd0_249.11-0ubuntu3_arm64.deb" \
-            "http://ports.ubuntu.com/pool/main/libg/libgcrypt20/libgcrypt20_1.10.2-1ubuntu1_arm64.deb" \
-            "http://ports.ubuntu.com/pool/main/libg/libgpg-error/libgpg-error0_1.43-3_arm64.deb" \
-            "http://ports.ubuntu.com/pool/main/libw/libwebp/libwebp7_1.2.4-0ubuntu2_arm64.deb" \
-            "http://ports.ubuntu.com/pool/main/libw/libwebp/libwebpdemux2_1.2.4-0ubuntu2_arm64.deb" \
-            "http://ports.ubuntu.com/pool/main/liba/libavif/libavif13_0.10.1-1_arm64.deb" \
-            "http://ports.ubuntu.com/pool/main/libj/libjpeg-turbo/libjpeg8_2.1.4-1ubuntu1_arm64.deb" \
-            "http://ports.ubuntu.com/pool/main/libp/libpng1.6/libpng16-16_1.6.38-2ubuntu1_arm64.deb" \
-            "http://ports.ubuntu.com/pool/main/g/gstreamer1.0/libgstreamer1.0-0_1.20.3-0ubuntu1_arm64.deb" \
-            "http://ports.ubuntu.com/pool/main/gst-plugins-base1.0/libgstreamer-plugins-base1.0-0_1.20.4-2ubuntu2_arm64.deb" \
-          ; do
-            wget -q "$dep" 2>/dev/null || true
-          done
+          # WPE WebKit 完整依赖列表（从 Ubuntu 22.04 arm64 ports）
+          DEPS=(
+            "http://ports.ubuntu.com/pool/main/a/atk1.0/libatk1.0-0_2.36.0-3build1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/libs/libseccomp/libseccomp2_2.5.3-2ubuntu2_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/h/harfbuzz/libharfbuzz0b_2.7.4-1ubuntu3_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/f/freetype/libfreetype6_2.11.1+dfsg-1ubuntu0.2_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/f/fontconfig/libfontconfig1_2.13.1-4.4ubuntu1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/c/cairo/libcairo2_1.16.0-5ubuntu1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/i/icu/libicu70_70.1-2_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/w/woff2/libwoff1_1.0.2-1build4_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/libx/libxslt/libxslt1.1_1.1.35-1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/g/gst-plugins-base1.0/libgstreamer-gl1.0-0_1.20.4-2ubuntu2_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/libj/libjpeg-turbo/libjpeg8_2.1.4-1ubuntu1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/libp/libpng1.6/libpng16-16_1.6.38-2ubuntu1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/libw/libwebp/libwebp7_1.2.4-0ubuntu2_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/libw/libwebp/libwebpdemux2_1.2.4-0ubuntu2_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/liba/libavif/libavif13_0.10.1-1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/o/openssl/libssl3_3.0.2-0ubuntu1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/libs/libsamplerate/libsamplerate0_0.2.2-2_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/t/taglib/libtag1v5-vanilla_1.11.1+dfsg.1-2_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/o/orc/liborc-0.4-0_0.4.32-2_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/g/gstreamer1.0/libgstreamer1.0-0_1.20.3-0ubuntu1_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/gst-plugins-base1.0/libgstreamer-plugins-base1.0-0_1.20.4-2ubuntu2_arm64.deb"
+          )
+          for url in "${DEPS[@]}"; do wget -q "$url" 2>/dev/null || true; done
 
           WKWEB="http://ports.ubuntu.com/pool/universe/w/wpewebkit"
           for ver in 2.36.0-2ubuntu3 2.28.1-1; do
