@@ -175,7 +175,7 @@ jobs:
           # 先下载 WebKit 的传递依赖（批量下载常见依赖）
           for dep in \
             "http://ports.ubuntu.com/pool/main/a/atk1.0/libatk1.0-0_2.36.0-3build1_arm64.deb" \
-            "http://ports.ubuntu.com/pool/main/libs/libseccomp/libseccomp2_2.5.3-2ubuntu4_arm64.deb" \
+            "http://ports.ubuntu.com/pool/main/libs/libseccomp/libseccomp2_2.5.3-2ubuntu2_arm64.deb" \
             "http://ports.ubuntu.com/pool/main/s/systemd/libsystemd0_249.11-0ubuntu3_arm64.deb" \
             "http://ports.ubuntu.com/pool/main/libg/libgcrypt20/libgcrypt20_1.10.2-1ubuntu1_arm64.deb" \
             "http://ports.ubuntu.com/pool/main/libg/libgpg-error/libgpg-error0_1.43-3_arm64.deb" \
