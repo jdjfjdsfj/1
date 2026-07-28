@@ -1,0 +1,9 @@
+{
+    "id": "com.kugou.music",
+    "name": "酷狗音乐",
+    "version": "0.1",
+    "author": "姓胡的胡萝卜 & DeepSeek",
+    "description": "自动领取概念版VIP，可搜索并下载音乐到/userdisk/Music/酷狗音乐",
+    "icon": "file://userdisk/PenMods/plugins/kugou/icon.png",
+    "main_qml": "main.qml"
+}
