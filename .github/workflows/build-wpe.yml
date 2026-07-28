@@ -197,8 +197,23 @@ jobs:
             "http://ports.ubuntu.com/pool/main/g/gstreamer1.0/libgstreamer1.0-0_1.20.3-0ubuntu1_arm64.deb"
             "http://ports.ubuntu.com/pool/main/gst-plugins-base1.0/libgstreamer-plugins-base1.0-0_1.20.4-2ubuntu2_arm64.deb"
             "http://ports.ubuntu.com/pool/main/s/sqlite3/libsqlite3-0_3.37.2-2ubuntu0.7_arm64.deb"
+            "http://ports.ubuntu.com/pool/main/libx/libxslt/libxslt1.1_1.1.35-1_arm64.deb"
           )
           for url in "${DEPS[@]}"; do wget -q "$url" 2>/dev/null || true; done
+
+          for deb in *.deb; do dpkg-deb -x "$deb" /tmp/extract 2>/dev/null || true; done
+          cp /tmp/extract/usr/lib/aarch64-linux-gnu/*.so* $INSTALL_PREFIX/lib/ 2>/dev/null || true
+
+          # 打印完整 NEEDED 列表，一次性看清缺什么
+          WEBKIT_SO=$(ls $INSTALL_PREFIX/lib/libWPEWebKit-*.so.* 2>/dev/null | head -1)
+          if [ -f "$WEBKIT_SO" ]; then
+            echo "=== FULL NEEDED deps ==="
+            aarch64-linux-gnu-objdump -p "$WEBKIT_SO" 2>/dev/null | grep NEEDED
+            echo "=== STILL MISSING ==="
+            aarch64-linux-gnu-objdump -p "$WEBKIT_SO" 2>/dev/null | grep NEEDED | awk '{print $2}' | while read f; do
+              ls $INSTALL_PREFIX/lib/$f >/dev/null 2>&1 || echo "MISSING: $f"
+            done
+          fi
 
           WKWEB="http://ports.ubuntu.com/pool/universe/w/wpewebkit"
           for ver in 2.36.0-2ubuntu3 2.28.1-1; do
